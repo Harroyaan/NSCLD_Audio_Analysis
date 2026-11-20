@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSCLD — Audio Measurement Workbench</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body data-theme="dark">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div class="brand-copy">
+        <strong>NSCLD</strong>
+        <span>Audio Measurement Workbench</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="openBtn" class="btn primary">打开波形</button>
+      <button id="digitalBtn" class="btn">数字流</button>
+      <button id="bitToggleBtn" class="btn">位域拆分</button>
+      <button id="exportWavBtn" class="btn">导出 WAV</button>
+      <button id="exportReportBtn" class="btn">导出报告</button>
+      <button id="settingsBtn" class="btn icon" title="设置">⚙</button>
+      <button id="themeBtn" class="btn icon" title="切换主题">◐</button>
+    </div>
+    <div class="file-meta" id="fileMeta">
+      <span class="meta-name">未加载信号</span>
+      <span class="meta-sep"></span>
+      <span>Codec / ADC / DAC 故障排查</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <nav class="rail" aria-label="视图导航">
+      <div class="rail-label">视图</div>
+      <button class="rail-item active" data-view="wave"><span class="rail-glyph">∿</span><span>波形</span></button>
+      <button class="rail-item" data-view="spectrum"><span class="rail-glyph">⌁</span><span>频谱</span></button>
+      <button class="rail-item" data-view="jitter"><span class="rail-glyph">⊾</span><span>抖动</span></button>
+      <button class="rail-item" data-view="import"><span class="rail-glyph">⇥</span><span>导入</span></button>
+      <button class="rail-item" data-view="tools"><span class="rail-glyph">ƒ</span><span>工具</span></button>
+      <div class="rail-spacer"></div>
+      <div class="rail-foot">Web<br>Instrument</div>
+    </nav>
+
+    <section class="workspace">
+      <div class="view active" id="view-wave">
+        <div class="transport">
+          <div class="transport-row">
+            <button id="playBtn" class="btn accent">▶ 播放</button>
+            <button id="stopBtn" class="btn">■ 停止</button>
+            <label class="inline-field">速度
+              <select id="speedSelect">
+                <option value="0.25">0.25x</option>
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+                <option value="4">4x</option>
+              </select>
+            </label>
+            <label class="inline-field">循环
+              <select id="loopSelect">
+                <option value="off">关</option>
+                <option value="once">单圈</option>
+                <option value="continuous">连续</option>
+              </select>
+            </label>
+            <label class="inline-field">通道
+              <select id="channelSelect"><option>CH1</option></select>
+            </label>
+            <div class="segmented" id="waveLayout">
+              <button data-layout="lanes" class="active">分行</button>
+              <button data-layout="overlay">叠放</button>
+            </div>
+            <label class="inline-field">播放源
+              <select id="sourceSelect"><option value="raw">原始</option><option value="filtered">滤波后</option></select>
+            </label>
+            <button id="selectBtn" class="btn ghost">选择分析区</button>
+            <button id="resetViewBtn" class="btn ghost">全图</button>
+          </div>
+          <div class="transport-row secondary">
+            <span id="filterInfo" class="status-chip">时域滤波: 关</span>
+            <span class="hint">左键游标 A · Ctrl+左键游标 B · 滚轮缩放 · Shift+滚轮纵向 · 中键框选</span>
+          </div>
+        </div>
+        <div class="canvas-card">
+          <canvas id="waveCanvas" aria-label="时域波形"></canvas>
+          <div class="canvas-badge" id="waveBadge">TIME DOMAIN</div>
+          <div class="canvas-empty" id="waveEmpty">载入 WAV / FLAC / CSV，或打开内置测试信号</div>
+        </div>
+        <div class="view-caption">
+          <span>纵轴按通道独立自适应</span>
+          <span>右键设置 Y 范围</span>
+          <span id="selectionInfo">全记录</span>
+        </div>
+
+        <div id="bitfieldPanel" class="bitfield-panel hidden">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">位域工作台</div>
+              <h2>从当前瞬态波形解码字段</h2>
+            </div>
+            <div class="bit-meta" id="bitMeta">32-bit · 原始码字</div>
+          </div>
+          <div class="bit-settings">
+            <label>字宽 <input id="bitWordBits" type="number" min="4" max="32" value="32"></label>
+            <label>输出单位 <input id="bitUnit" type="text" value="FS"></label>
+            <label class="check"><input id="bitNormalize" type="checkbox"> 全局归一化</label>
+            <label class="check"><input id="bitDiagramVisible" type="checkbox" checked> 显示图解</label>
+            <span class="hint">起始填实际 bit 号，31=MSB；位宽向 bit0 方向展开。</span>
+          </div>
+          <div class="bit-table-wrap">
+            <table class="bit-table">
+              <thead>
+                <tr>
+                  <th>名称</th><th>起始bit</th><th>位宽</th><th>符号</th><th>缩放</th><th>偏置</th><th>FullScale</th><th>单位</th><th>归一</th><th>位序</th><th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="bitFieldsBody"></tbody>
+            </table>
+          </div>
+          <div class="bit-actions">
+            <button id="bitAddRow" class="btn">+ 添加字段</button>
+            <button id="bitRemoveRow" class="btn ghost">− 删除选中</button>
+            <button id="bitApply" class="btn accent">应用拆分</button>
+            <button id="bitRestore" class="btn">恢复原始</button>
+            <span id="bitError" class="inline-error"></span>
+          </div>
+          <div id="bitDiagramWrap" class="bit-diagram-wrap">
+            <canvas id="bitDiagram"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-spectrum">
+        <div class="transport">
+          <div class="transport-row">
+            <label class="inline-field">窗函数
+              <select id="windowSelect">
+                <option>Hann</option><option>Blackman</option><option>Blackman-Harris</option>
+                <option>Hamming</option><option>FlatTop</option><option>矩形</option>
+              </select>
+            </label>
+            <label class="inline-field">FFT
+              <select id="fftSelect">
+                <option value="0">自动</option><option>4096</option><option>8192</option><option>16384</option>
+                <option>32768</option><option>65536</option><option>131072</option><option>262144</option>
+              </select>
+            </label>
+            <label class="check"><input id="averageCheck" type="checkbox" checked> Welch 平均</label>
+            <label class="inline-field">加权
+              <select id="weightSelect"><option value="none">无</option><option value="A">A 计权</option><option value="BS468">BS.468-4</option></select>
+            </label>
+            <div class="segmented" id="specLayout">
+              <button data-layout="stacked" class="active">分行</button>
+              <button data-layout="overlay">叠放</button>
+            </div>
+            <div class="segmented" id="spectrumAxis">
+              <button data-axis="log" class="active">对数</button>
+              <button data-axis="linear">线性</button>
+            </div>
+          </div>
+        </div>
+        <div class="canvas-card tall">
+          <canvas id="spectrumCanvas" aria-label="频谱"></canvas>
+          <div class="canvas-badge">FFT / WELCH</div>
+          <div class="canvas-empty" id="spectrumEmpty">载入信号后计算频谱</div>
+        </div>
+        <div class="view-caption">
+          <span id="spectrumMeta">尚未分析</span>
+          <span>右键切换 Line / Log</span>
+        </div>
+      </div>
+
+      <div class="view" id="view-jitter">
+        <div class="transport">
+          <div class="transport-row">
+            <span class="status-chip" id="jitterHead">抖动分析尚未运行</span>
+            <label class="check"><input id="jitterTrend" type="checkbox" checked> 周期误差趋势</label>
+          </div>
+        </div>
+        <div class="canvas-card tall">
+          <canvas id="jitterCanvas" aria-label="抖动分析"></canvas>
+          <div class="canvas-badge">PERIOD JITTER</div>
+          <div class="canvas-empty" id="jitterEmpty">载入周期信号以测量抖动</div>
+        </div>
+      </div>
+
+      <div class="view" id="view-import">
+        <div class="import-grid">
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">⇥</div>
+            <h2>把信号拖进来</h2>
+            <p>WAV · FLAC · AP CSV · 逻辑分析仪 CSV</p>
+            <button class="btn accent" id="dropBrowseBtn">选择文件</button>
+            <button class="btn" id="demoBtn">打开内置测试信号</button>
+          </div>
+          <div class="import-card">
+            <div class="eyebrow">数字流</div>
+            <h3>原始 TDM / I2S / PDM</h3>
+            <div class="form-grid">
+              <label>模式<select id="digitalMode"><option value="tdm">TDM / I2S</option><option value="pdm">PDM</option></select></label>
+              <label>采样率 Hz<input id="digitalRate" type="number" value="48000"></label>
+              <label>字宽<input id="digitalBits" type="number" value="16" min="1" max="32"></label>
+              <label>slot 数<input id="digitalSlots" type="number" value="2" min="1" max="16"></label>
+              <label>slot 宽<input id="digitalSlotWidth" type="number" value="16" min="1" max="64"></label>
+              <label>位偏移<input id="digitalOffset" type="number" value="0" min="0"></label>
+              <label>对齐<select id="digitalAlign"><option value="left">左对齐</option><option value="i2s">I2S</option></select></label>
+              <label>位序<select id="digitalOrder"><option value="msb">MSB First</option><option value="lsb">LSB First</option></select></label>
+              <label>符号<select id="digitalSigned"><option value="signed">有符号</option><option value="unsigned">无符号</option></select></label>
+              <label>PDM 抽取<input id="digitalDecim" type="number" value="64" min="1"></label>
+            </div>
+            <button class="btn accent" id="digitalBrowseBtn">选择二进制文件</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-tools">
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="eyebrow">换算</div>
+            <h3>dB ↔ 比值</h3>
+            <label>dB<input id="toolDb" type="number" value="0"></label>
+            <output id="toolDbOut">1.000</output>
+            <label>比值<input id="toolRatio" type="number" value="1" step="0.01"></label>
+            <output id="toolRatioOut">0.00 dB</output>
+          </div>
+          <div class="tool-card">
+            <div class="eyebrow">功率</div>
+            <h3>Vrms → W / dBm</h3>
+            <label>Vrms<input id="toolVolt" type="number" value="1" step="0.01"></label>
+            <label>负载 Ω<input id="toolLoad" type="number" value="8" step="1"></label>
+            <output id="toolPowerOut">0.125 W · 20.97 dBm</output>
+          </div>
+          <div class="tool-card">
+            <div class="eyebrow">FFT 规划</div>
+            <h3>分辨率计算</h3>
+            <label>采样率<input id="toolFs" type="number" value="48000"></label>
+            <label>FFT 点数<input id="toolN" type="number" value="32768"></label>
+            <output id="toolFftOut">Δf = 1.465 Hz · 时长 682.7 ms</output>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span>测量读数</span>
+        <span id="activeChannel" class="channel-badge">CH1</span>
+      </div>
+      <div class="cards" id="cards">
+        <section class="reading-card accent-cyan" id="cardSummary" hidden>
+          <div class="card-caption">多通道总表</div>
+          <div id="summaryRows" class="summary-rows"></div>
+        </section>
+        <section class="reading-card accent-cyan">
+          <div class="card-label">RMS 电平</div>
+          <div class="reading"><span id="rmsValue">—</span><span id="rmsUnit" class="reading-unit">dBFS</span></div>
+          <div class="card-sub" id="rmsSub">等待信号</div>
+        </section>
+        <section class="reading-card accent-violet">
+          <div class="card-label">峰值</div>
+          <div class="reading"><span id="peakValue">—</span><span id="peakUnit" class="reading-unit">dBFS</span></div>
+          <div class="card-sub" id="peakSub">等待信号</div>
+        </section>
+        <section class="reading-card accent-green">
+          <div class="card-label">功率</div>
+          <div class="reading"><span id="powerValue">—</span><span id="powerUnit" class="reading-unit"></span></div>
+          <div class="card-sub" id="powerSub">伏特单位信号可计算</div>
+        </section>
+        <section class="reading-card accent-amber">
+          <div class="card-label">THD+N</div>
+          <div class="reading"><span id="thdValue">—</span><span class="reading-unit">dB</span></div>
+          <div class="card-sub" id="thdSub">等待频谱</div>
+        </section>
+        <section class="reading-card accent-green">
+          <div class="card-label">SNR</div>
+          <div class="reading"><span id="snrValue">—</span><span class="reading-unit">dB</span></div>
+          <div class="card-sub" id="snrSub">等待频谱</div>
+        </section>
+        <section class="reading-card accent-cyan">
+          <div class="card-label">基波</div>
+          <div class="reading"><span id="freqValue">—</span><span id="freqUnit" class="reading-unit">Hz</span></div>
+          <div class="card-sub" id="freqSub">FFT 谱峰</div>
+        </section>
+        <section class="reading-card accent-amber">
+          <div class="card-label">周期抖动</div>
+          <div class="reading"><span id="jitterValue">—</span><span class="reading-unit">ps</span></div>
+          <div class="card-sub" id="jitterSub">等待抖动分析</div>
+        </section>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">频谱分析</div>
+        <div class="sidebar-controls">
+          <label>带宽 Hz<input id="bandwidthInput" type="number" value="0" min="0"></label>
+          <label>滤波器<select id="filterKind"><option value="none">无</option><option value="A">A-weight</option><option value="BS468">ITU-R BS.468-4</option><option value="lowpass">低通</option><option value="highpass">高通</option><option value="bandpass">带通</option><option value="notch">带阻</option></select></label>
+          <label>截止/中心 Hz<input id="filterCutoff" type="number" value="1000"></label>
+          <label>阶数<select id="filterOrder"><option>1</option><option selected>2</option><option>4</option></select></label>
+          <button id="reanalyzeBtn" class="btn accent wide">应用滤波 / 重新分析</button>
+        </div>
+        <div class="analysis-foot" id="analysisFoot">分析区域：全记录</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="statusbar">
+    <span id="statusInfo">NSCLD ready · Web instrument</span>
+    <span class="status-hover" id="statusHover"></span>
+  </footer>
+
+  <input id="fileInput" type="file" accept=".wav,.flac,.csv,.txt,.bin,.dat,.pdm,audio/*" hidden>
+  <input id="digitalInput" type="file" accept=".bin,.dat,.raw,.pdm,.csv,.txt" hidden>
+
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-head"><div><div class="eyebrow">NSCLD settings</div><h2>工作台设置</h2></div><button class="icon-btn" data-close="settingsModal">×</button></div>
+      <div class="settings-grid">
+        <label>界面主题<select id="settingTheme"><option value="dark">暗色仪器</option><option value="light">亮色仪器</option></select></label>
+        <label>频谱布局<select id="settingLayout"><option value="stacked">分行</option><option value="overlay">叠放</option></select></label>
+        <label>X 轴<select id="settingAxis"><option value="log">对数</option><option value="linear">线性</option></select></label>
+        <label>默认循环<select id="settingLoop"><option value="off">关</option><option value="once">单圈</option><option value="continuous">连续</option></select></label>
+        <label>默认倍速<select id="settingSpeed"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="0.75">0.75x</option><option value="1">1x</option><option value="1.5">1.5x</option><option value="2">2x</option><option value="4">4x</option></select></label>
+      </div>
+      <div class="modal-actions">
+        <button id="exportSettingsBtn" class="btn">导出设置</button>
+        <button id="importSettingsBtn" class="btn">导入设置</button>
+        <span class="spacer"></span>
+        <button class="btn" data-close="settingsModal">取消</button>
+        <button id="saveSettingsBtn" class="btn accent">应用</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="axisModal">
+    <div class="modal-card small">
+      <div class="modal-head"><div><div class="eyebrow">Y axis</div><h2 id="axisTitle">固定 Y 范围</h2></div><button class="icon-btn" data-close="axisModal">×</button></div>
+      <div class="settings-grid">
+        <label>最小值<input id="axisMin" type="number" step="any"></label>
+        <label>最大值<input id="axisMax" type="number" step="any"></label>
+      </div>
+      <div class="modal-actions"><span class="spacer"></span><button class="btn" data-close="axisModal">取消</button><button id="axisApply" class="btn accent">应用</button></div>
+    </div>
+  </div>
+
+  <div id="contextMenu" class="context-menu hidden"></div>
+  <input id="settingsFileInput" type="file" accept=".json,.nscldcfg,.txt" hidden>
+  <script src="js/dsp.js"></script>
+  <script src="js/formats.js"></script>
+  <script src="js/plots.js"></script>
+  <script src="js/bitfield.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

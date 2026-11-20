@@ -1,0 +1,3770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <!-- NSCLD standalone build 2026-11-19. All CSS and JavaScript are embedded. -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NSCLD — Audio Measurement Workbench</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #14161b;
+  --panel: #1a1d24;
+  --panel-2: #1f232c;
+  --card: #20242d;
+  --card-hi: #262b36;
+  --input: #171a21;
+  --line: #303744;
+  --line-soft: #272d38;
+  --text: #e9edf5;
+  --muted: #9aa5b8;
+  --dim: #687386;
+  --accent: #56c4ff;
+  --accent-soft: rgba(86, 196, 255, .14);
+  --amber: #e8a838;
+  --green: #7ec8a0;
+  --violet: #b09ee8;
+  --rose: #e89ab8;
+  --danger: #ff7d7d;
+  --grid: rgba(160, 178, 204, .12);
+  --shadow: 0 18px 50px rgba(0, 0, 0, .28);
+  --radius: 8px;
+  --font: "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  --display: Bahnschrift, "Segoe UI Variable Display", "Microsoft YaHei UI", sans-serif;
+  --mono: "Cascadia Mono", Consolas, "Microsoft YaHei UI", monospace;
+}
+
+body[data-theme="light"] {
+  color-scheme: light;
+  --bg: #edf1f6;
+  --panel: #e4eaf1;
+  --panel-2: #f4f7fa;
+  --card: #ffffff;
+  --card-hi: #f7fafc;
+  --input: #ffffff;
+  --line: #c7d1de;
+  --line-soft: #dce4ee;
+  --text: #2d3142;
+  --muted: #4a4f65;
+  --dim: #6b7488;
+  --accent: #0077b6;
+  --accent-soft: rgba(0, 119, 182, .1);
+  --amber: #a86700;
+  --green: #167a5b;
+  --violet: #6d57c8;
+  --rose: #a84770;
+  --danger: #b83333;
+  --grid: rgba(61, 83, 110, .16);
+  --shadow: 0 16px 36px rgba(30, 48, 70, .12);
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 13px;
+  overflow: hidden;
+  transition: background .18s ease, color .18s ease;
+}
+button, input, select { font: inherit; }
+button { color: inherit; }
+button:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.hidden { display: none !important; }
+.spacer { flex: 1; }
+
+.topbar {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  position: relative;
+  z-index: 20;
+}
+.brand { display: flex; align-items: center; min-width: 200px; gap: 10px; }
+.brand-mark {
+  width: 30px; height: 30px; display: grid; place-items: center;
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  color: var(--accent);
+  font-family: var(--display);
+  font-size: 19px;
+  line-height: 1;
+  box-shadow: inset 0 0 0 3px rgba(86, 196, 255, .06);
+}
+.brand-copy { display: flex; flex-direction: column; line-height: 1.05; }
+.brand-copy strong {
+  font-family: var(--display);
+  font-size: 19px;
+  letter-spacing: .08em;
+  font-weight: 600;
+}
+.brand-copy span { color: var(--muted); font-size: 9px; letter-spacing: .04em; margin-top: 4px; }
+.top-actions { display: flex; gap: 6px; align-items: center; flex-wrap: nowrap; overflow-x: auto; }
+.file-meta {
+  margin-left: auto; display: flex; align-items: center; gap: 9px;
+  color: var(--dim); font-size: 11px; white-space: nowrap; overflow: hidden;
+}
+.file-meta .meta-name { color: var(--muted); max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
+.meta-sep { width: 1px; height: 15px; background: var(--line); }
+
+.btn {
+  height: 30px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color .15s ease, background .15s ease, color .15s ease;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--accent); background: var(--card-hi); }
+.btn.primary, .btn.accent {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+  background: var(--accent-soft);
+}
+.btn.primary:hover, .btn.accent:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+.btn.ghost { background: transparent; color: var(--muted); }
+.btn.ghost:hover { color: var(--text); }
+.btn.icon { width: 30px; padding: 0; font-size: 16px; }
+.btn.wide { width: 100%; margin-top: 8px; }
+.icon-btn {
+  border: 0; background: transparent; color: var(--muted);
+  width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-size: 20px;
+}
+.icon-btn:hover { background: var(--card-hi); color: var(--text); }
+
+.shell {
+  height: calc(100vh - 58px - 25px);
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 304px;
+  min-height: 0;
+}
+.rail {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 14px 8px 10px;
+  display: flex; flex-direction: column; gap: 5px;
+}
+.rail-label, .rail-foot {
+  color: var(--dim); font-size: 9px; letter-spacing: .12em; text-align: center;
+  text-transform: uppercase;
+}
+.rail-label { margin-bottom: 6px; }
+.rail-foot { margin-top: auto; line-height: 1.5; letter-spacing: .08em; }
+.rail-spacer { flex: 1; }
+.rail-item {
+  height: 58px; border: 1px solid transparent; border-radius: 8px;
+  background: transparent; color: var(--muted); display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px; font-size: 11px; cursor: pointer;
+  transition: .15s ease;
+}
+.rail-item:hover { color: var(--text); background: var(--card); }
+.rail-item.active {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+  background: var(--accent-soft);
+}
+.rail-glyph { font-family: var(--display); font-size: 22px; line-height: 1; }
+
+.workspace { min-width: 0; min-height: 0; background: var(--bg); position: relative; }
+.view { display: none; height: 100%; padding: 12px 14px 8px; min-height: 0; }
+.view.active { display: flex; flex-direction: column; gap: 8px; }
+.transport {
+  border: 1px solid var(--line-soft);
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 8px;
+  flex: 0 0 auto;
+}
+.transport-row { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; min-height: 31px; }
+.transport-row.secondary { margin-top: 4px; color: var(--dim); font-size: 10px; }
+.inline-field { color: var(--muted); font-size: 10px; display: inline-flex; align-items: center; gap: 5px; }
+.inline-field select, .inline-field input {
+  height: 27px; color: var(--text); background: var(--input);
+  border: 1px solid var(--line); border-radius: 5px; padding: 0 6px;
+}
+.hint { color: var(--dim); font-size: 10px; }
+.status-chip {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 8px;
+  color: var(--amber); background: rgba(232, 168, 56, .08);
+  border: 1px solid rgba(232, 168, 56, .18); border-radius: 999px; font-size: 10px;
+}
+.segmented { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.segmented button {
+  height: 27px; border: 0; background: var(--input); color: var(--muted); padding: 0 9px;
+  cursor: pointer; border-right: 1px solid var(--line);
+}
+.segmented button:last-child { border-right: 0; }
+.segmented button.active { color: var(--accent); background: var(--accent-soft); }
+
+.canvas-card {
+  flex: 1 1 auto; min-height: 140px; position: relative;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel);
+  overflow: hidden;
+}
+.canvas-card.tall { min-height: 300px; }
+.canvas-card canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.canvas-badge {
+  position: absolute; right: 10px; top: 9px; color: var(--dim); font-family: var(--mono);
+  font-size: 9px; letter-spacing: .12em; pointer-events: none;
+}
+.canvas-empty {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  color: var(--dim); font-size: 14px; pointer-events: none;
+}
+.view-caption {
+  flex: 0 0 auto; display: flex; justify-content: space-between; gap: 12px;
+  color: var(--dim); font-size: 10px; padding: 0 2px;
+}
+
+.sidebar {
+  background: var(--panel); border-left: 1px solid var(--line);
+  min-width: 0; display: flex; flex-direction: column; min-height: 0;
+}
+.sidebar-head {
+  flex: 0 0 auto; padding: 12px 14px 8px; color: var(--muted); font-size: 11px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--line-soft);
+}
+.channel-badge {
+  color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--line));
+  border-radius: 4px; padding: 1px 6px; font-family: var(--mono); font-size: 9px;
+}
+.cards { flex: 1 1 auto; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.reading-card {
+  border: 1px solid var(--line-soft); border-left: 2px solid var(--accent);
+  border-radius: 7px; padding: 9px 10px 8px; background: var(--card); min-height: 74px;
+  flex: 0 0 auto;
+}
+.reading-card.accent-cyan { border-left-color: var(--accent); }
+.reading-card.accent-violet { border-left-color: var(--violet); }
+.reading-card.accent-green { border-left-color: var(--green); }
+.reading-card.accent-amber { border-left-color: var(--amber); }
+.card-label { color: var(--muted); font-size: 10px; margin-bottom: 3px; }
+.reading { display: flex; align-items: baseline; gap: 5px; min-height: 31px; }
+.reading > span:first-child {
+  font-family: var(--mono); font-size: 24px; letter-spacing: -.045em; color: var(--text);
+}
+.reading-unit { color: var(--muted); font-family: var(--mono); font-size: 10px; }
+.card-sub { color: var(--dim); font-family: var(--mono); font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#cardSummary { min-height: 92px; }
+.summary-rows { font-family: var(--mono); font-size: 9px; color: var(--muted); display: grid; gap: 3px; }
+.summary-row { display: grid; grid-template-columns: 46px repeat(4, 1fr); gap: 4px; white-space: nowrap; }
+.summary-row.head { color: var(--dim); border-bottom: 1px solid var(--line-soft); padding-bottom: 2px; }
+.sidebar-section { flex: 0 0 auto; padding: 10px; border-top: 1px solid var(--line-soft); }
+.sidebar-title { color: var(--muted); font-size: 10px; margin-bottom: 8px; }
+.sidebar-controls { display: grid; gap: 7px; }
+.sidebar-controls label, .settings-grid label { color: var(--muted); font-size: 10px; display: grid; gap: 3px; }
+.sidebar-controls input, .sidebar-controls select,
+.settings-grid input, .settings-grid select,
+.form-grid input, .form-grid select, .form-grid select {
+  width: 100%; height: 27px; border: 1px solid var(--line); border-radius: 5px;
+  color: var(--text); background: var(--input); padding: 0 7px;
+}
+.sidebar-controls input:disabled, .sidebar-controls select:disabled {
+  opacity: .42; cursor: not-allowed;
+}
+.analysis-foot { color: var(--dim); font-size: 9px; margin-top: 7px; font-family: var(--mono); }
+
+.statusbar {
+  height: 25px; display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--line); background: var(--panel); padding: 0 12px;
+  color: var(--muted); font-size: 9px; font-family: var(--mono); gap: 12px;
+  white-space: nowrap; overflow: hidden;
+}
+.status-hover { color: var(--accent); text-align: right; overflow: hidden; text-overflow: ellipsis; }
+
+.bitfield-panel {
+  flex: 0 0 auto; border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--panel); padding: 9px; display: flex; flex-direction: column; gap: 7px;
+  max-height: 52vh; overflow: auto;
+  animation: rise .16s ease-out;
+}
+@keyframes rise { from { opacity: 0; transform: translateY(4px); } }
+.panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.eyebrow { color: var(--dim); font-size: 9px; letter-spacing: .08em; }
+.panel-head h2, .modal-head h2, .import-card h3, .tool-card h3 {
+  margin: 2px 0 0; font-family: var(--display); font-weight: 600; letter-spacing: .02em;
+}
+.panel-head h2 { font-size: 17px; }
+.bit-meta { color: var(--muted); font-family: var(--mono); font-size: 9px; }
+.bit-settings { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
+.bit-settings input[type="number"], .bit-settings input[type="text"] {
+  height: 25px; width: 66px; color: var(--text); background: var(--input);
+  border: 1px solid var(--line); border-radius: 5px; padding: 0 5px;
+}
+.check { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+.bit-table-wrap { border: 1px solid var(--line); border-radius: 6px; overflow: auto; max-height: 165px; }
+.bit-table { width: 100%; border-collapse: collapse; font-size: 10px; min-width: 820px; }
+.bit-table th {
+  text-align: left; color: var(--dim); font-weight: 500; background: var(--panel-2);
+  padding: 5px 5px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.bit-table td { padding: 3px 4px; border-bottom: 1px solid var(--line-soft); color: var(--text); }
+.bit-table tr:last-child td { border-bottom: 0; }
+.bit-table tr.overlap td { background: rgba(232, 168, 56, .11); }
+.bit-table input[type="text"], .bit-table input[type="number"], .bit-table select {
+  width: 100%; height: 24px; color: var(--text); background: var(--input);
+  border: 1px solid var(--line); border-radius: 4px; padding: 0 4px;
+}
+.bit-table input[type="checkbox"] { accent-color: var(--accent); }
+.bit-table .overlap-badge { color: var(--amber); white-space: nowrap; }
+.bit-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.inline-error { color: var(--danger); font-size: 10px; }
+.bit-diagram-wrap { height: 112px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.bit-diagram-wrap canvas { width: 100%; height: 100%; display: block; }
+
+.modal {
+  position: fixed; inset: 0; z-index: 60; background: rgba(7, 9, 13, .62);
+  display: grid; place-items: center; padding: 20px; backdrop-filter: blur(3px);
+}
+.modal-card {
+  width: min(640px, 96vw); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; box-shadow: var(--shadow); padding: 16px;
+}
+.modal-card.small { width: min(380px, 94vw); }
+.modal-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.modal-head h2 { font-size: 20px; }
+.settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-actions { display: flex; align-items: center; gap: 7px; margin-top: 16px; }
+
+.context-menu {
+  position: fixed; z-index: 80; min-width: 200px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 7px; box-shadow: var(--shadow); padding: 4px;
+}
+.context-menu button {
+  width: 100%; text-align: left; border: 0; background: transparent; color: var(--text);
+  padding: 7px 9px; border-radius: 4px; cursor: pointer;
+}
+.context-menu button:hover { background: var(--card-hi); color: var(--accent); }
+.context-menu .menu-note { padding: 6px 9px 3px; color: var(--dim); font-size: 9px; }
+
+.import-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; min-height: 0; }
+.drop-zone, .import-card, .tool-card {
+  border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); padding: 20px;
+}
+.drop-zone {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px;
+  border-style: dashed; text-align: center; min-height: 360px;
+  transition: border-color .15s ease, background .15s ease;
+}
+.drop-zone.dragover { border-color: var(--accent); background: var(--accent-soft); }
+.drop-icon { font-size: 32px; color: var(--accent); font-family: var(--display); }
+.drop-zone h2 { margin: 0; font-family: var(--display); font-size: 24px; }
+.drop-zone p { margin: 0 0 8px; color: var(--muted); }
+.import-card h3 { font-size: 18px; margin-bottom: 12px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 12px; }
+.tools-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-content: start; }
+.tool-card { display: flex; flex-direction: column; gap: 8px; }
+.tool-card h3 { font-size: 18px; margin-bottom: 3px; }
+.tool-card label { color: var(--muted); font-size: 10px; display: grid; gap: 4px; }
+.tool-card input {
+  height: 28px; color: var(--text); background: var(--input); border: 1px solid var(--line);
+  border-radius: 5px; padding: 0 7px;
+}
+.tool-card output { color: var(--accent); font-family: var(--mono); font-size: 12px; padding-top: 4px; }
+
+@media (max-width: 1180px) {
+  .shell { grid-template-columns: 68px minmax(0, 1fr) 270px; }
+  .file-meta { display: none; }
+  .top-actions { margin-left: auto; }
+  .transport-row.secondary .hint { display: none; }
+  .bit-settings .hint { display: none; }
+}
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .topbar { height: auto; min-height: 58px; flex-wrap: wrap; padding: 8px 10px; }
+  .brand { min-width: 150px; flex: 1 1 auto; }
+  .top-actions { width: 100%; margin-left: 0; flex-wrap: wrap; overflow: visible; }
+  .file-meta { display: none; }
+  .shell {
+    height: auto; min-height: calc(100vh - 100px);
+    grid-template-columns: 1fr;
+  }
+  .rail { flex-direction: row; padding: 6px; border-right: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+  .rail-label, .rail-foot, .rail-spacer { display: none; }
+  .rail-item { min-width: 64px; height: 48px; }
+  .workspace { min-height: 720px; }
+  .sidebar { border-left: 0; border-top: 1px solid var(--line); max-height: 420px; }
+  .view { min-height: 680px; }
+  .import-grid, .tools-grid { grid-template-columns: 1fr; }
+  .bitfield-panel { max-height: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}
+
+</style>
+</head>
+<body data-theme="dark">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">N</div>
+      <div class="brand-copy">
+        <strong>NSCLD</strong>
+        <span>Audio Measurement Workbench</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button id="openBtn" class="btn primary">打开波形</button>
+      <button id="digitalBtn" class="btn">数字流</button>
+      <button id="bitToggleBtn" class="btn">位域拆分</button>
+      <button id="exportWavBtn" class="btn">导出 WAV</button>
+      <button id="exportReportBtn" class="btn">导出报告</button>
+      <button id="settingsBtn" class="btn icon" title="设置">⚙</button>
+      <button id="themeBtn" class="btn icon" title="切换主题">◐</button>
+    </div>
+    <div class="file-meta" id="fileMeta">
+      <span class="meta-name">未加载信号</span>
+      <span class="meta-sep"></span>
+      <span>Codec / ADC / DAC 故障排查</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <nav class="rail" aria-label="视图导航">
+      <div class="rail-label">视图</div>
+      <button class="rail-item active" data-view="wave"><span class="rail-glyph">∿</span><span>波形</span></button>
+      <button class="rail-item" data-view="spectrum"><span class="rail-glyph">⌁</span><span>频谱</span></button>
+      <button class="rail-item" data-view="jitter"><span class="rail-glyph">⊾</span><span>抖动</span></button>
+      <button class="rail-item" data-view="import"><span class="rail-glyph">⇥</span><span>导入</span></button>
+      <button class="rail-item" data-view="tools"><span class="rail-glyph">ƒ</span><span>工具</span></button>
+      <div class="rail-spacer"></div>
+      <div class="rail-foot">Web<br>Instrument</div>
+    </nav>
+
+    <section class="workspace">
+      <div class="view active" id="view-wave">
+        <div class="transport">
+          <div class="transport-row">
+            <button id="playBtn" class="btn accent">▶ 播放</button>
+            <button id="stopBtn" class="btn">■ 停止</button>
+            <label class="inline-field">速度
+              <select id="speedSelect">
+                <option value="0.25">0.25x</option>
+                <option value="0.5">0.5x</option>
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2">2x</option>
+                <option value="4">4x</option>
+              </select>
+            </label>
+            <label class="inline-field">循环
+              <select id="loopSelect">
+                <option value="off">关</option>
+                <option value="once">单圈</option>
+                <option value="continuous">连续</option>
+              </select>
+            </label>
+            <label class="inline-field">通道
+              <select id="channelSelect"><option>CH1</option></select>
+            </label>
+            <div class="segmented" id="waveLayout">
+              <button data-layout="lanes" class="active">分行</button>
+              <button data-layout="overlay">叠放</button>
+            </div>
+            <label class="inline-field">播放源
+              <select id="sourceSelect"><option value="raw">原始</option><option value="filtered">滤波后</option></select>
+            </label>
+            <button id="selectBtn" class="btn ghost">选择分析区</button>
+            <button id="resetViewBtn" class="btn ghost">全图</button>
+          </div>
+          <div class="transport-row secondary">
+            <span id="filterInfo" class="status-chip">时域滤波: 关</span>
+            <span class="hint">左键游标 A · Ctrl+左键游标 B · 滚轮缩放 · Shift+滚轮纵向 · 中键框选</span>
+          </div>
+        </div>
+        <div class="canvas-card">
+          <canvas id="waveCanvas" aria-label="时域波形"></canvas>
+          <div class="canvas-badge" id="waveBadge">TIME DOMAIN</div>
+          <div class="canvas-empty" id="waveEmpty">载入 WAV / FLAC / CSV，或打开内置测试信号</div>
+        </div>
+        <div class="view-caption">
+          <span>纵轴按通道独立自适应</span>
+          <span>右键设置 Y 范围</span>
+          <span id="selectionInfo">全记录</span>
+        </div>
+
+        <div id="bitfieldPanel" class="bitfield-panel hidden">
+          <div class="panel-head">
+            <div>
+              <div class="eyebrow">位域工作台</div>
+              <h2>从当前瞬态波形解码字段</h2>
+            </div>
+            <div class="bit-meta" id="bitMeta">32-bit · 原始码字</div>
+          </div>
+          <div class="bit-settings">
+            <label>字宽 <input id="bitWordBits" type="number" min="4" max="32" value="32"></label>
+            <label>输出单位 <input id="bitUnit" type="text" value="FS"></label>
+            <label class="check"><input id="bitNormalize" type="checkbox"> 全局归一化</label>
+            <label class="check"><input id="bitDiagramVisible" type="checkbox" checked> 显示图解</label>
+            <span class="hint">起始填实际 bit 号，31=MSB；位宽向 bit0 方向展开。</span>
+          </div>
+          <div class="bit-table-wrap">
+            <table class="bit-table">
+              <thead>
+                <tr>
+                  <th>名称</th><th>起始bit</th><th>位宽</th><th>符号</th><th>缩放</th><th>偏置</th><th>FullScale</th><th>单位</th><th>归一</th><th>位序</th><th>状态</th>
+                </tr>
+              </thead>
+              <tbody id="bitFieldsBody"></tbody>
+            </table>
+          </div>
+          <div class="bit-actions">
+            <button id="bitAddRow" class="btn">+ 添加字段</button>
+            <button id="bitRemoveRow" class="btn ghost">− 删除选中</button>
+            <button id="bitApply" class="btn accent">应用拆分</button>
+            <button id="bitRestore" class="btn">恢复原始</button>
+            <span id="bitError" class="inline-error"></span>
+          </div>
+          <div id="bitDiagramWrap" class="bit-diagram-wrap">
+            <canvas id="bitDiagram"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-spectrum">
+        <div class="transport">
+          <div class="transport-row">
+            <label class="inline-field">窗函数
+              <select id="windowSelect">
+                <option>Hann</option><option>Blackman</option><option>Blackman-Harris</option>
+                <option>Hamming</option><option>FlatTop</option><option>矩形</option>
+              </select>
+            </label>
+            <label class="inline-field">FFT
+              <select id="fftSelect">
+                <option value="0">自动</option><option>4096</option><option>8192</option><option>16384</option>
+                <option>32768</option><option>65536</option><option>131072</option><option>262144</option>
+              </select>
+            </label>
+            <label class="check"><input id="averageCheck" type="checkbox" checked> Welch 平均</label>
+            <label class="inline-field">加权
+              <select id="weightSelect"><option value="none">无</option><option value="A">A 计权</option><option value="BS468">BS.468-4</option></select>
+            </label>
+            <div class="segmented" id="specLayout">
+              <button data-layout="stacked" class="active">分行</button>
+              <button data-layout="overlay">叠放</button>
+            </div>
+            <div class="segmented" id="spectrumAxis">
+              <button data-axis="log" class="active">对数</button>
+              <button data-axis="linear">线性</button>
+            </div>
+          </div>
+        </div>
+        <div class="canvas-card tall">
+          <canvas id="spectrumCanvas" aria-label="频谱"></canvas>
+          <div class="canvas-badge">FFT / WELCH</div>
+          <div class="canvas-empty" id="spectrumEmpty">载入信号后计算频谱</div>
+        </div>
+        <div class="view-caption">
+          <span id="spectrumMeta">尚未分析</span>
+          <span>右键切换 Line / Log</span>
+        </div>
+      </div>
+
+      <div class="view" id="view-jitter">
+        <div class="transport">
+          <div class="transport-row">
+            <span class="status-chip" id="jitterHead">抖动分析尚未运行</span>
+            <label class="check"><input id="jitterTrend" type="checkbox" checked> 周期误差趋势</label>
+          </div>
+        </div>
+        <div class="canvas-card tall">
+          <canvas id="jitterCanvas" aria-label="抖动分析"></canvas>
+          <div class="canvas-badge">PERIOD JITTER</div>
+          <div class="canvas-empty" id="jitterEmpty">载入周期信号以测量抖动</div>
+        </div>
+      </div>
+
+      <div class="view" id="view-import">
+        <div class="import-grid">
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-icon">⇥</div>
+            <h2>把信号拖进来</h2>
+            <p>WAV · FLAC · AP CSV · 逻辑分析仪 CSV</p>
+            <button class="btn accent" id="dropBrowseBtn">选择文件</button>
+            <button class="btn" id="demoBtn">打开内置测试信号</button>
+          </div>
+          <div class="import-card">
+            <div class="eyebrow">数字流</div>
+            <h3>原始 TDM / I2S / PDM</h3>
+            <div class="form-grid">
+              <label>模式<select id="digitalMode"><option value="tdm">TDM / I2S</option><option value="pdm">PDM</option></select></label>
+              <label>采样率 Hz<input id="digitalRate" type="number" value="48000"></label>
+              <label>字宽<input id="digitalBits" type="number" value="16" min="1" max="32"></label>
+              <label>slot 数<input id="digitalSlots" type="number" value="2" min="1" max="16"></label>
+              <label>slot 宽<input id="digitalSlotWidth" type="number" value="16" min="1" max="64"></label>
+              <label>位偏移<input id="digitalOffset" type="number" value="0" min="0"></label>
+              <label>对齐<select id="digitalAlign"><option value="left">左对齐</option><option value="i2s">I2S</option></select></label>
+              <label>位序<select id="digitalOrder"><option value="msb">MSB First</option><option value="lsb">LSB First</option></select></label>
+              <label>符号<select id="digitalSigned"><option value="signed">有符号</option><option value="unsigned">无符号</option></select></label>
+              <label>PDM 抽取<input id="digitalDecim" type="number" value="64" min="1"></label>
+            </div>
+            <button class="btn accent" id="digitalBrowseBtn">选择二进制文件</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-tools">
+        <div class="tools-grid">
+          <div class="tool-card">
+            <div class="eyebrow">换算</div>
+            <h3>dB ↔ 比值</h3>
+            <label>dB<input id="toolDb" type="number" value="0"></label>
+            <output id="toolDbOut">1.000</output>
+            <label>比值<input id="toolRatio" type="number" value="1" step="0.01"></label>
+            <output id="toolRatioOut">0.00 dB</output>
+          </div>
+          <div class="tool-card">
+            <div class="eyebrow">功率</div>
+            <h3>Vrms → W / dBm</h3>
+            <label>Vrms<input id="toolVolt" type="number" value="1" step="0.01"></label>
+            <label>负载 Ω<input id="toolLoad" type="number" value="8" step="1"></label>
+            <output id="toolPowerOut">0.125 W · 20.97 dBm</output>
+          </div>
+          <div class="tool-card">
+            <div class="eyebrow">FFT 规划</div>
+            <h3>分辨率计算</h3>
+            <label>采样率<input id="toolFs" type="number" value="48000"></label>
+            <label>FFT 点数<input id="toolN" type="number" value="32768"></label>
+            <output id="toolFftOut">Δf = 1.465 Hz · 时长 682.7 ms</output>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="sidebar">
+      <div class="sidebar-head">
+        <span>测量读数</span>
+        <span id="activeChannel" class="channel-badge">CH1</span>
+      </div>
+      <div class="cards" id="cards">
+        <section class="reading-card accent-cyan" id="cardSummary" hidden>
+          <div class="card-caption">多通道总表</div>
+          <div id="summaryRows" class="summary-rows"></div>
+        </section>
+        <section class="reading-card accent-cyan">
+          <div class="card-label">RMS 电平</div>
+          <div class="reading"><span id="rmsValue">—</span><span id="rmsUnit" class="reading-unit">dBFS</span></div>
+          <div class="card-sub" id="rmsSub">等待信号</div>
+        </section>
+        <section class="reading-card accent-violet">
+          <div class="card-label">峰值</div>
+          <div class="reading"><span id="peakValue">—</span><span id="peakUnit" class="reading-unit">dBFS</span></div>
+          <div class="card-sub" id="peakSub">等待信号</div>
+        </section>
+        <section class="reading-card accent-green">
+          <div class="card-label">功率</div>
+          <div class="reading"><span id="powerValue">—</span><span id="powerUnit" class="reading-unit"></span></div>
+          <div class="card-sub" id="powerSub">伏特单位信号可计算</div>
+        </section>
+        <section class="reading-card accent-amber">
+          <div class="card-label">THD+N</div>
+          <div class="reading"><span id="thdValue">—</span><span class="reading-unit">dB</span></div>
+          <div class="card-sub" id="thdSub">等待频谱</div>
+        </section>
+        <section class="reading-card accent-green">
+          <div class="card-label">SNR</div>
+          <div class="reading"><span id="snrValue">—</span><span class="reading-unit">dB</span></div>
+          <div class="card-sub" id="snrSub">等待频谱</div>
+        </section>
+        <section class="reading-card accent-cyan">
+          <div class="card-label">基波</div>
+          <div class="reading"><span id="freqValue">—</span><span id="freqUnit" class="reading-unit">Hz</span></div>
+          <div class="card-sub" id="freqSub">FFT 谱峰</div>
+        </section>
+        <section class="reading-card accent-amber">
+          <div class="card-label">周期抖动</div>
+          <div class="reading"><span id="jitterValue">—</span><span class="reading-unit">ps</span></div>
+          <div class="card-sub" id="jitterSub">等待抖动分析</div>
+        </section>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">频谱分析</div>
+        <div class="sidebar-controls">
+          <label>带宽 Hz<input id="bandwidthInput" type="number" value="0" min="0"></label>
+          <label>滤波器<select id="filterKind"><option value="none">无</option><option value="A">A-weight</option><option value="BS468">ITU-R BS.468-4</option><option value="lowpass">低通</option><option value="highpass">高通</option><option value="bandpass">带通</option><option value="notch">带阻</option></select></label>
+          <label>截止/中心 Hz<input id="filterCutoff" type="number" value="1000"></label>
+          <label>阶数<select id="filterOrder"><option>1</option><option selected>2</option><option>4</option></select></label>
+          <button id="reanalyzeBtn" class="btn accent wide">应用滤波 / 重新分析</button>
+        </div>
+        <div class="analysis-foot" id="analysisFoot">分析区域：全记录</div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="statusbar">
+    <span id="statusInfo">NSCLD ready · Web instrument</span>
+    <span class="status-hover" id="statusHover"></span>
+  </footer>
+
+  <input id="fileInput" type="file" accept=".wav,.flac,.csv,.txt,.bin,.dat,.pdm,audio/*" hidden>
+  <input id="digitalInput" type="file" accept=".bin,.dat,.raw,.pdm,.csv,.txt" hidden>
+
+  <div class="modal hidden" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-head"><div><div class="eyebrow">NSCLD settings</div><h2>工作台设置</h2></div><button class="icon-btn" data-close="settingsModal">×</button></div>
+      <div class="settings-grid">
+        <label>界面主题<select id="settingTheme"><option value="dark">暗色仪器</option><option value="light">亮色仪器</option></select></label>
+        <label>频谱布局<select id="settingLayout"><option value="stacked">分行</option><option value="overlay">叠放</option></select></label>
+        <label>X 轴<select id="settingAxis"><option value="log">对数</option><option value="linear">线性</option></select></label>
+        <label>默认循环<select id="settingLoop"><option value="off">关</option><option value="once">单圈</option><option value="continuous">连续</option></select></label>
+        <label>默认倍速<select id="settingSpeed"><option value="0.25">0.25x</option><option value="0.5">0.5x</option><option value="0.75">0.75x</option><option value="1">1x</option><option value="1.5">1.5x</option><option value="2">2x</option><option value="4">4x</option></select></label>
+      </div>
+      <div class="modal-actions">
+        <button id="exportSettingsBtn" class="btn">导出设置</button>
+        <button id="importSettingsBtn" class="btn">导入设置</button>
+        <span class="spacer"></span>
+        <button class="btn" data-close="settingsModal">取消</button>
+        <button id="saveSettingsBtn" class="btn accent">应用</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal hidden" id="axisModal">
+    <div class="modal-card small">
+      <div class="modal-head"><div><div class="eyebrow">Y axis</div><h2 id="axisTitle">固定 Y 范围</h2></div><button class="icon-btn" data-close="axisModal">×</button></div>
+      <div class="settings-grid">
+        <label>最小值<input id="axisMin" type="number" step="any"></label>
+        <label>最大值<input id="axisMax" type="number" step="any"></label>
+      </div>
+      <div class="modal-actions"><span class="spacer"></span><button class="btn" data-close="axisModal">取消</button><button id="axisApply" class="btn accent">应用</button></div>
+    </div>
+  </div>
+
+  <div id="contextMenu" class="context-menu hidden"></div>
+  <input id="settingsFileInput" type="file" accept=".json,.nscldcfg,.txt" hidden>
+  <script>
+(function (global) {
+  'use strict';
+
+  const DSP = {};
+  const A_FREQS = [31.5, 63, 100, 200, 400, 800, 1000, 2000, 3150, 4000, 5000, 6300, 7100, 8000, 9000, 10000, 12500, 14000, 16000, 20000, 31500];
+  const BS_FREQS = A_FREQS.slice();
+  const BS_RESP = [-29.9, -23.9, -19.8, -13.8, -7.8, -1.9, 0, 5.6, 9, 10.5, 11.7, 12.2, 12, 11.4, 10.1, 8.1, 0, -5.3, -11.7, -22.2, -42.7];
+  const WINDOW_NAMES = ['Hann', 'Blackman', 'Blackman-Harris', 'Hamming', 'FlatTop', '矩形'];
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function db(v) { return v > 1e-300 ? 20 * Math.log10(v) : -300; }
+  function clampDb(v) { return v < -300 || !isFinite(v) ? -300 : v; }
+
+  function nextPow2(n) {
+    let p = 1;
+    while (p < n) p <<= 1;
+    return p;
+  }
+
+  function prevPow2(n) {
+    let p = 1;
+    while (p * 2 <= n) p <<= 1;
+    return p;
+  }
+
+  function fft(re, im, inverse) {
+    const n = re.length;
+    for (let i = 1, j = 0; i < n; i++) {
+      let bit = n >> 1;
+      for (; j & bit; bit >>= 1) j ^= bit;
+      j ^= bit;
+      if (i < j) {
+        let t = re[i]; re[i] = re[j]; re[j] = t;
+        t = im[i]; im[i] = im[j]; im[j] = t;
+      }
+    }
+    for (let len = 2; len <= n; len <<= 1) {
+      const angle = (inverse ? 2 : -2) * Math.PI / len;
+      const wr = Math.cos(angle), wi = Math.sin(angle);
+      for (let i = 0; i < n; i += len) {
+        let cr = 1, ci = 0;
+        for (let k = 0; k < len / 2; k++) {
+          const ar = re[i + k], ai = im[i + k];
+          const br = re[i + k + len / 2], bi = im[i + k + len / 2];
+          const tr = br * cr - bi * ci, ti = br * ci + bi * cr;
+          re[i + k] = ar + tr; im[i + k] = ai + ti;
+          re[i + k + len / 2] = ar - tr; im[i + k + len / 2] = ai - ti;
+          const ncr = cr * wr - ci * wi;
+          ci = cr * wi + ci * wr; cr = ncr;
+        }
+      }
+    }
+    if (inverse) {
+      for (let i = 0; i < n; i++) { re[i] /= n; im[i] /= n; }
+    }
+  }
+
+  function makeWindow(kind, n) {
+    const w = new Float64Array(n);
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+      const x = n <= 1 ? 0 : 2 * Math.PI * i / (n - 1);
+      let v = 1;
+      switch (kind) {
+        case 'Blackman': v = 0.42 - 0.5 * Math.cos(x) + 0.08 * Math.cos(2 * x); break;
+        case 'Blackman-Harris': v = 0.35875 - 0.48829 * Math.cos(x) + 0.14128 * Math.cos(2 * x) - 0.01168 * Math.cos(3 * x); break;
+        case 'Hamming': v = 0.54 - 0.46 * Math.cos(x); break;
+        case 'FlatTop':
+          v = 0.21557895 - 0.41663158 * Math.cos(x) + 0.277263158 * Math.cos(2 * x)
+            - 0.083578947 * Math.cos(3 * x) + 0.006947368 * Math.cos(4 * x);
+          break;
+        case '矩形': v = 1; break;
+        default: v = 0.5 - 0.5 * Math.cos(x);
+      }
+      w[i] = v; sum += v;
+    }
+    let enbw = 0;
+    for (let i = 0; i < n; i++) enbw += w[i] * w[i];
+    enbw = n * enbw / (sum * sum);
+    return { w: w, coherentGain: sum / n, enbw: enbw };
+  }
+
+  function aWeightDb(f) {
+    if (f <= 0) return -300;
+    const f2 = f * f;
+    const num = 12194 * 12194 * f2 * f2;
+    const den = (f2 + 20.6 * 20.6)
+      * Math.sqrt((f2 + 107.7 * 107.7) * (f2 + 737.9 * 737.9))
+      * (f2 + 12194 * 12194);
+    return 20 * Math.log10(num / den) + 2.0;
+  }
+
+  function bs468Db(f) {
+    if (f <= BS_FREQS[0]) return BS_RESP[0];
+    if (f >= BS_FREQS[BS_FREQS.length - 1]) return BS_RESP[BS_RESP.length - 1];
+    for (let i = 1; i < BS_FREQS.length; i++) {
+      if (f <= BS_FREQS[i]) {
+        const t = (Math.log(f) - Math.log(BS_FREQS[i - 1]))
+          / (Math.log(BS_FREQS[i]) - Math.log(BS_FREQS[i - 1]));
+        return BS_RESP[i - 1] + t * (BS_RESP[i] - BS_RESP[i - 1]);
+      }
+    }
+    return 0;
+  }
+
+  function genericFilterDb(filter, f) {
+    if (!filter || !filter.kind || filter.kind === 'none') return 0;
+    if (filter.kind === 'A') return aWeightDb(f);
+    if (filter.kind === 'BS468') return bs468Db(f);
+    const nyq = Math.max(1, filter.fs / 2);
+    f = clamp(f, 1e-9, nyq);
+    const order = Math.max(1, filter.order || 2);
+    if (filter.kind === 'lowpass') {
+      const fc = clamp(filter.cutoff || 1000, 1, nyq);
+      return -10 * Math.log10(1 + Math.pow(f / fc, 2 * order));
+    }
+    if (filter.kind === 'highpass') {
+      const fc = clamp(filter.cutoff || 1000, 1, nyq);
+      return -10 * Math.log10(1 + Math.pow(fc / f, 2 * order));
+    }
+    const fc = clamp(filter.center || 1000, 1, nyq);
+    const bw = clamp(filter.bandwidth || Math.max(1, fc / Math.max(0.1, filter.q || 1)), 1, nyq);
+    if (filter.kind === 'bandpass') {
+      const lo = Math.max(1, fc - bw / 2), hi = Math.min(nyq, fc + bw / 2);
+      const hp = f < lo ? -10 * Math.log10(1 + Math.pow(lo / f, 2 * order)) : 0;
+      const lp = f > hi ? -10 * Math.log10(1 + Math.pow(f / hi, 2 * order)) : 0;
+      return hp + lp;
+    }
+    if (filter.kind === 'notch') {
+      const q = Math.max(0.05, filter.q || 1);
+      const t = (f / fc - fc / f) * q;
+      return -10 * Math.log10(1 + t * t);
+    }
+    return 0;
+  }
+
+  function weightingDb(opts, f) {
+    let v = 0;
+    const fk = opts.filter && opts.filter.kind;
+    if (opts.weighting === 'A' && fk !== 'A') v += aWeightDb(f);
+    if (opts.weighting === 'BS468' && fk !== 'BS468') v += bs468Db(f);
+    if (fk && fk !== 'none') {
+      const f2 = Object.assign({}, opts.filter, { fs: opts.fs });
+      v += genericFilterDb(f2, f);
+    }
+    return v;
+  }
+
+  function weightingLabel(opts) {
+    const labels = [];
+    const fk = opts.filter && opts.filter.kind;
+    if (opts.weighting === 'A' && fk !== 'A') labels.push('A');
+    if (opts.weighting === 'BS468' && fk !== 'BS468') labels.push('BS468');
+    if (fk === 'A') { if (labels.indexOf('A') < 0) labels.push('A'); }
+    else if (fk === 'BS468') { if (labels.indexOf('BS468') < 0) labels.push('BS468'); }
+    else if (fk && fk !== 'none') labels.push('Filter');
+    return labels.join('+');
+  }
+
+  function applyWeighting(samples, fs, opts) {
+    if (!opts || (!opts.weighting || opts.weighting === 'none') && (!opts.filter || opts.filter.kind === 'none')) return null;
+    const n = samples.length;
+    if (!n) return null;
+    const size = nextPow2(n + Math.min(n, 4096));
+    const re = new Float64Array(size), im = new Float64Array(size);
+    for (let i = 0; i < n; i++) re[i] = samples[i];
+    fft(re, im, false);
+    for (let k = 0; k <= size / 2; k++) {
+      const f = k * fs / size;
+      const g = Math.pow(10, weightingDb(opts, f) / 20);
+      re[k] *= g; im[k] *= g;
+      if (k > 0 && k < size / 2) { re[size - k] *= g; im[size - k] *= g; }
+    }
+    fft(re, im, true);
+    const out = new Float32Array(n);
+    for (let i = 0; i < n; i++) out[i] = re[i];
+    return { samples: out, label: weightingLabel(opts) };
+  }
+
+  function timeStats(samples, start, count) {
+    const n = samples.length;
+    start = clamp(start | 0, 0, n);
+    count = clamp(count | 0, 0, n - start);
+    if (!count) return null;
+    let sum = 0, sq = 0, peak = 0, pos = 0, neg = 0;
+    for (let i = start; i < start + count; i++) {
+      const v = samples[i];
+      sum += v; sq += v * v;
+      if (Math.abs(v) >= peak) peak = Math.abs(v);
+      if (v > pos) pos = v;
+      if (v < neg) neg = v;
+    }
+    const dc = sum / count;
+    const rms = Math.sqrt(sq / count);
+    let acsq = 0;
+    for (let i = start; i < start + count; i++) {
+      const d = samples[i] - dc; acsq += d * d;
+    }
+    const acRms = Math.sqrt(acsq / count);
+    return {
+      count: count,
+      rms: rms, acRms: acRms, dc: dc,
+      rmsDbFs: clampDb(db(rms)), acRmsDbFs: clampDb(db(acRms)),
+      peakAbs: peak, peakPos: pos, peakNeg: neg, peakToPeak: pos - neg,
+      peakDbFs: clampDb(db(peak)),
+      crestFactorDb: acRms > 0 ? 20 * Math.log10(peak / acRms) : 0
+    };
+  }
+
+  function histogram(samples, start, count, bins) {
+    bins = bins || 96;
+    start = clamp(start | 0, 0, samples.length);
+    count = clamp(count | 0, 0, samples.length - start);
+    if (!count) return null;
+    let lo = Infinity, hi = -Infinity, sum = 0, sum2 = 0;
+    for (let i = start; i < start + count; i++) {
+      const v = samples[i]; if (v < lo) lo = v; if (v > hi) hi = v;
+      sum += v; sum2 += v * v;
+    }
+    if (!isFinite(lo) || hi <= lo) { lo -= 1; hi += 1; }
+    const counts = new Uint32Array(bins);
+    const scale = (bins - 1) / (hi - lo);
+    for (let i = start; i < start + count; i++) counts[clamp(((samples[i] - lo) * scale) | 0, 0, bins - 1)]++;
+    const mean = sum / count;
+    const sd = Math.sqrt(Math.max(0, sum2 / count - mean * mean));
+    return { counts: counts, min: lo, max: hi, mean: mean, std: sd, peakToPeak: hi - lo, count: count };
+  }
+
+  function spectrum(samples, start, count, fs, opts) {
+    opts = opts || {};
+    const nSamples = samples.length;
+    start = clamp(start | 0, 0, nSamples);
+    count = clamp(count | 0, 0, nSamples - start);
+    if (count < 32 || !fs) return { valid: false, message: '分析区域过短' };
+    let n = opts.fftSize || 0;
+    if (!n) n = count >= 1024 ? prevPow2(Math.min(count, 65536)) : nextPow2(count);
+    n = clamp(nextPow2(n), 64, 262144);
+    const win = makeWindow(opts.window || 'Hann', n);
+    const re = new Float64Array(n), im = new Float64Array(n);
+    const power = new Float64Array(n / 2 + 1);
+    const hop = Math.max(1, n >> 1);
+    let segments = 0;
+    const maxSegments = Math.max(1, opts.maxSegments || 128);
+    for (let pos = start; pos < start + count; pos += hop) {
+      for (let i = 0; i < n; i++) {
+        const idx = pos + i;
+        re[i] = idx < start + count ? samples[idx] * win.w[i] : 0;
+        im[i] = 0;
+      }
+      fft(re, im, false);
+      for (let k = 0; k <= n / 2; k++) power[k] += re[k] * re[k] + im[k] * im[k];
+      segments++;
+      if (!opts.averaging || pos + n >= start + count) break;
+      if (segments >= maxSegments) break;
+    }
+    for (let k = 0; k < power.length; k++) power[k] /= Math.max(1, segments);
+    const binHz = fs / n;
+    const freq = new Float64Array(n / 2 + 1);
+    const values = new Float64Array(n / 2 + 1);
+    const rawPower = new Float64Array(n / 2 + 1);
+    const weightOpts = { weighting: opts.weighting || 'none', filter: opts.filter || { kind: 'none' }, fs: fs };
+    const bandwidth = opts.bandwidth > 0 ? Math.min(opts.bandwidth, fs / 2) : fs / 2;
+    for (let k = 0; k <= n / 2; k++) {
+      const f = k * binHz;
+      freq[k] = f;
+      const gainDb = weightingDb(weightOpts, f);
+      const gain = f > bandwidth ? 0 : Math.pow(10, gainDb / 10);
+      rawPower[k] = power[k];
+      const p = power[k] * gain;
+      const amp = (k === 0 || k === n / 2 ? 1 : 2) * Math.sqrt(p) / win.coherentGain / n;
+      values[k] = clampDb(db(amp));
+    }
+    let fund = -1, maxP = -Infinity;
+    for (let k = 2; k < values.length; k++) {
+      if (freq[k] > bandwidth) break;
+      const p = rawPower[k] * Math.pow(10, weightingDb(weightOpts, freq[k]) / 10);
+      if (p > maxP) { maxP = p; fund = k; }
+    }
+    if (fund < 0) return { valid: false, message: '未找到有效谱峰' };
+    let d = 0;
+    if (fund > 0 && fund < values.length - 1) {
+      const a = values[fund - 1], b = values[fund], c = values[fund + 1];
+      const den = a - 2 * b + c;
+      if (Math.abs(den) > 1e-12) d = clamp(0.5 * (a - c) / den, -0.5, 0.5);
+    }
+    const f0 = (fund + d) * binHz;
+    const signalHz = Math.max(2, Math.round(f0 * (opts.notchPercent || 3) / 100 / binHz));
+    const harmBins = [];
+    for (let h = 2; h <= 8; h++) {
+      const hf = f0 * h; if (hf >= bandwidth) break;
+      harmBins.push(Math.round(hf / binHz));
+    }
+    let total = 0, sig = 0, harm = 0;
+    const signalSet = new Set();
+    for (let k = Math.max(1, fund - signalHz); k <= Math.min(n / 2, fund + signalHz); k++) signalSet.add(k);
+    for (let k = 1; k <= n / 2 && freq[k] <= bandwidth; k++) {
+      const p = rawPower[k] * Math.pow(10, weightingDb(weightOpts, freq[k]) / 10);
+      total += p;
+      if (signalSet.has(k)) sig += p;
+    }
+    for (let hi = 0; hi < harmBins.length; hi++) {
+      const hb = harmBins[hi];
+      for (let k = Math.max(2, hb - signalHz); k <= Math.min(n / 2, hb + signalHz); k++) {
+        const p = rawPower[k] * Math.pow(10, weightingDb(weightOpts, freq[k]) / 10);
+        harm += p;
+      }
+    }
+    const residual = Math.max(0, total - sig);
+    const noise = Math.max(0, residual - harm);
+    const tplusn = 10 * Math.log10(Math.max(1e-30, residual / Math.max(1e-30, sig)));
+    const thd = 10 * Math.log10(Math.max(1e-30, harm / Math.max(1e-30, sig)));
+    const snr = 10 * Math.log10(Math.max(1e-30, sig / Math.max(1e-30, noise)));
+    const sinad = 10 * Math.log10(Math.max(1e-30, sig / Math.max(1e-30, noise + harm)));
+    const harmonicDb = [], harmonicFreq = [];
+    for (let hi = 0; hi < harmBins.length; hi++) {
+      const hb = harmBins[hi];
+      let hp = 0;
+      for (let k = Math.max(2, hb - signalHz); k <= Math.min(n / 2, hb + signalHz); k++) hp += rawPower[k] * Math.pow(10, weightingDb(weightOpts, freq[k]) / 10);
+      harmonicDb.push(clampDb(10 * Math.log10(Math.max(1e-30, hp))));
+      harmonicFreq.push(freq[hb]);
+    }
+    const bins = [];
+    for (let k = 1; k <= n / 2 && freq[k] <= bandwidth; k++) {
+      if (signalSet.has(k)) continue;
+      bins.push(values[k]);
+    }
+    bins.sort((a, b) => a - b);
+    const noiseFloor = bins.length ? bins[(bins.length / 2) | 0] : -300;
+    const peaks = [];
+    for (let k = 2; k < values.length - 1 && freq[k] <= bandwidth; k++) {
+      if (values[k] > values[k - 1] && values[k] >= values[k + 1]) peaks.push({ f: freq[k], db: values[k], hz: freq[k] });
+    }
+    peaks.sort((a, b) => b.db - a.db);
+    return {
+      valid: true, message: '', freq: freq, db: values, binHz: binHz, fftSize: n, segments: segments,
+      window: opts.window || 'Hann', fundamentalHz: f0, fundamentalDb: values[fund],
+      thdPlusNDb: tplusn, thdPlusPct: Math.sqrt(Math.max(0, residual / Math.max(1e-30, sig))) * 100,
+      thdDb: thd, thdPct: Math.sqrt(Math.max(0, harm / Math.max(1e-30, sig))) * 100,
+      snrDb: snr, sinadDb: sinad, enob: (sinad - 1.76) / 6.02,
+      noiseFloorDb: noiseFloor, harmonicDb: harmonicDb, harmonicFreq: harmonicFreq,
+      peaks: peaks.slice(0, 12), bandwidth: bandwidth, weighting: weightingLabel(weightOpts)
+    };
+  }
+
+  function jitter(samples, start, count, fs) {
+    start = clamp(start | 0, 0, samples.length);
+    count = clamp(count | 0, 0, samples.length - start);
+    if (count < 64) return { valid: false, message: '样本不足' };
+    let lo = Infinity, hi = -Infinity;
+    for (let i = start; i < start + count; i++) { if (samples[i] < lo) lo = samples[i]; if (samples[i] > hi) hi = samples[i]; }
+    const amp = hi - lo;
+    if (amp < 1e-9) return { valid: false, message: '无周期信号' };
+    const threshold = (lo + hi) * 0.5;
+    const hyst = amp * 0.02;
+    const crossings = [];
+    let state = samples[start] > threshold ? 1 : -1;
+    for (let i = start + 1; i < start + count; i++) {
+      const prev = samples[i - 1], curr = samples[i];
+      if (state < 0 && curr > threshold + hyst) {
+        const t = i - 1 + (threshold - prev) / (curr - prev || 1e-30);
+        crossings.push(t); state = 1;
+      } else if (state > 0 && curr < threshold - hyst) {
+        state = -1;
+      }
+    }
+    if (crossings.length < 6) return { valid: false, message: '过零不足' };
+    const periods = [];
+    for (let i = 1; i < crossings.length; i++) periods.push(crossings[i] - crossings[i - 1]);
+    let mean = 0; for (const p of periods) mean += p; mean /= periods.length;
+    let v = 0; for (const p of periods) v += (p - mean) * (p - mean);
+    const rms = Math.sqrt(v / periods.length);
+    if (mean <= 0 || rms / mean > 0.2) return { valid: false, message: '周期不稳定，无法测抖动' };
+    let pp = 0; for (const p of periods) pp = Math.max(pp, Math.abs(p - mean));
+    const cc = [];
+    for (let i = 1; i < periods.length; i++) cc.push(periods[i] - periods[i - 1]);
+    let ccSq = 0; for (const p of cc) ccSq += p * p;
+    return {
+      valid: true, message: '', crossings: crossings, periods: periods,
+      f0: fs / mean, meanPeriod: mean, rmsPeriod: rms, ppPeriod: pp,
+      rmsCycle: cc.length ? Math.sqrt(ccSq / cc.length) : 0,
+      percent: mean > 0 ? rms / mean * 100 : 0,
+      trend: periods.map((p, i) => ({ i: i, error: p - mean }))
+    };
+  }
+
+  DSP.fft = fft;
+  DSP.nextPow2 = nextPow2;
+  DSP.prevPow2 = prevPow2;
+  DSP.windowNames = WINDOW_NAMES;
+  DSP.aWeightDb = aWeightDb;
+  DSP.bs468Db = bs468Db;
+  DSP.filterDb = genericFilterDb;
+  DSP.weightingDb = weightingDb;
+  DSP.weightingLabel = weightingLabel;
+  DSP.applyWeighting = applyWeighting;
+  DSP.timeStats = timeStats;
+  DSP.histogram = histogram;
+  DSP.spectrum = spectrum;
+  DSP.jitter = jitter;
+  DSP.clamp = clamp;
+  DSP.db = db;
+  global.DSP = DSP;
+})(window);
+
+</script>
+  <script>
+(function (global) {
+  'use strict';
+
+  const F = {};
+  const textDecoder = new TextDecoder('utf-8');
+
+  function ascii(view, off, len) {
+    let s = '';
+    for (let i = 0; i < len; i++) s += String.fromCharCode(view.getUint8(off + i));
+    return s;
+  }
+
+  function baseSignal(name, sampleRate, channels, format) {
+    return {
+      name: name,
+      sampleRate: sampleRate,
+      channels: channels,
+      channelCount: channels.length,
+      length: channels.length ? channels[0].length : 0,
+      duration: sampleRate > 0 && channels.length ? channels[0].length / sampleRate : 0,
+      format: format || 'WAV',
+      bits: 0,
+      unit: 'FS',
+      channelUnits: new Array(channels.length).fill('FS'),
+      channelNames: channels.map((_, i) => 'CH' + (i + 1)),
+      rawWords: null,
+      rawBits: 0
+    };
+  }
+
+  function readInt24(view, off) {
+    let v = view.getUint8(off) | (view.getUint8(off + 1) << 8) | (view.getUint8(off + 2) << 16);
+    if (v & 0x800000) v |= 0xff000000;
+    return v;
+  }
+
+  function parseWav(buffer) {
+    const view = new DataView(buffer);
+    if (view.byteLength < 12) throw new Error('WAV 文件过短');
+    const riff = ascii(view, 0, 4);
+    if (riff !== 'RIFF' && riff !== 'RF64') throw new Error('不是 RIFF/RF64 WAV');
+    let p = 12, fmt = null, dataOff = 0, dataSize = 0;
+    while (p + 8 <= view.byteLength) {
+      const id = ascii(view, p, 4);
+      let size = view.getUint32(p + 4, true);
+      const body = p + 8;
+      if (id === 'fmt ') {
+        let audioFormat = view.getUint16(body, true);
+        const channels = view.getUint16(body + 2, true);
+        const sampleRate = view.getUint32(body + 4, true);
+        const blockAlign = view.getUint16(body + 12, true);
+        const bits = view.getUint16(body + 14, true);
+        if (audioFormat === 0xfffe && size >= 40) {
+          audioFormat = view.getUint16(body + 24, true);
+        }
+        fmt = { format: audioFormat, channels: channels, sampleRate: sampleRate, blockAlign: blockAlign, bits: bits };
+      } else if (id === 'data') {
+        dataOff = body;
+        dataSize = size;
+        if (size === 0xffffffff || body + size > view.byteLength) dataSize = view.byteLength - body;
+        if (size > 4) break;
+      }
+      p = body + size + (size & 1);
+    }
+    if (!fmt) throw new Error('WAV 缺少 fmt chunk');
+    if (!dataOff) throw new Error('WAV 缺少 data chunk');
+    if (!fmt.channels || !fmt.sampleRate) throw new Error('WAV 参数无效');
+    const bytes = fmt.bits >> 3;
+    const frames = Math.floor(dataSize / Math.max(1, fmt.blockAlign));
+    const channels = [];
+    const rawWords = fmt.format === 1 || fmt.format === 0xfffe ? [] : null;
+    for (let c = 0; c < fmt.channels; c++) {
+      channels.push(new Float32Array(frames));
+      if (rawWords) rawWords.push(new Uint32Array(frames));
+    }
+    for (let i = 0, off = dataOff; i < frames; i++, off += fmt.blockAlign) {
+      for (let c = 0; c < fmt.channels; c++) {
+        const o = off + c * bytes;
+        let v = 0, raw = 0;
+        if (fmt.format === 3) {
+          if (fmt.bits === 64) v = view.getFloat64(o, true);
+          else v = view.getFloat32(o, true);
+        } else if (fmt.bits === 8) {
+          raw = view.getUint8(o);
+          v = (raw - 128) / 128;
+        } else if (fmt.bits === 16) {
+          const s = view.getInt16(o, true);
+          raw = s & 0xffff; v = s / 32768;
+        } else if (fmt.bits === 24) {
+          const s = readInt24(view, o);
+          raw = s & 0xffffff; v = s / 8388608;
+        } else if (fmt.bits === 32) {
+          const s = view.getInt32(o, true);
+          raw = s >>> 0; v = s / 2147483648;
+        } else {
+          v = 0;
+        }
+        channels[c][i] = v;
+        if (rawWords) rawWords[c][i] = raw;
+      }
+    }
+    const sig = baseSignal('WAV', fmt.sampleRate, channels, fmt.format === 3 ? 'WAV float' : 'WAV PCM');
+    sig.bits = fmt.bits;
+    sig.rawBits = rawWords ? fmt.bits : 0;
+    sig.rawWords = rawWords;
+    sig.format = (fmt.format === 3 ? 'WAV float' : 'WAV PCM') + ' ' + fmt.bits + '-bit';
+    return sig;
+  }
+
+  function flacInfo(buffer) {
+    const view = new DataView(buffer);
+    if (ascii(view, 0, 4) !== 'fLaC') return null;
+    if (view.byteLength < 42) return null;
+    const b20 = view.getUint8(20), b21 = view.getUint8(21);
+    const sampleRate = (view.getUint8(18) << 12) | (view.getUint8(19) << 4) | (b20 >> 4);
+    const channels = ((b20 >> 1) & 7) + 1;
+    const bits = (((b20 & 1) << 4) | (b21 >> 4)) + 1;
+    return { sampleRate, channels, bits };
+  }
+
+  async function parseFlac(buffer, name) {
+    const info = flacInfo(buffer);
+    if (!info) throw new Error('FLAC 头解析失败');
+    const Ctx = global.OfflineAudioContext || global.webkitOfflineAudioContext;
+    if (!Ctx) throw new Error('浏览器不支持 Web Audio 解码');
+    const rate = Math.max(8000, Math.min(96000, info.sampleRate || 48000));
+    const ctx = new Ctx(Math.max(1, info.channels), 1, rate);
+    const data = buffer.slice(0);
+    const audio = await ctx.decodeAudioData(data);
+    const channels = [];
+    for (let c = 0; c < audio.numberOfChannels; c++) channels.push(new Float32Array(audio.getChannelData(c)));
+    const sig = baseSignal(name || 'FLAC', audio.sampleRate || info.sampleRate, channels, 'FLAC');
+    sig.bits = info.bits;
+    sig.format = 'FLAC ' + info.bits + '-bit';
+    return sig;
+  }
+
+  function parseDelimited(text) {
+    const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim().length);
+    if (!lines.length) throw new Error('CSV 为空');
+    let delimiter = ',';
+    if (lines[0].indexOf('\t') >= 0 && lines[0].indexOf(',') < 0) delimiter = '\t';
+    else if (lines[0].indexOf(';') >= 0 && lines[0].indexOf(',') < 0) delimiter = ';';
+    let header = null, start = 0;
+    const first = lines[0].split(delimiter);
+    if (first.some(v => isNaN(parseFloat(v)))) { header = first.map(v => v.trim()); start = 1; }
+    const rows = [];
+    for (let i = start; i < lines.length; i++) {
+      const cols = lines[i].split(delimiter);
+      if (cols.length < 2) continue;
+      const nums = cols.map(v => parseFloat(v));
+      if (nums.every(v => isNaN(v))) continue;
+      rows.push(nums);
+    }
+    if (!rows.length) throw new Error('CSV 没有数值列');
+    return { header, rows, delimiter };
+  }
+
+  function parseCsv(text, name) {
+    const { header, rows } = parseDelimited(text);
+    if (header && header.some(h => /bclk|bit.?clock/i.test(h)) && header.some(h => /fs|frame/i.test(h))) {
+      return decodeLogicCsv(header, rows, name);
+    }
+    const cols = rows[0].length;
+    let timeCol = -1;
+    if (header) {
+      for (let i = 0; i < header.length; i++) {
+        if (/time|时间|^t$|sec/i.test(header[i])) { timeCol = i; break; }
+      }
+    }
+    if (timeCol < 0 && !header && cols > 1) {
+      let monotonic = true;
+      for (let i = 1; i < Math.min(rows.length, 64); i++) {
+        if (!(rows[i][0] > rows[i - 1][0])) { monotonic = false; break; }
+      }
+      if (monotonic) timeCol = 0;
+    }
+    const valueCols = [];
+    for (let i = 0; i < cols; i++) if (i !== timeCol) valueCols.push(i);
+    let fs = 48000;
+    if (timeCol >= 0 && rows.length > 2) {
+      const t0 = rows[0][timeCol], t1 = rows[1][timeCol];
+      let sec = Math.abs(t1 - t0);
+      if (header && /ms|毫秒/i.test(header[timeCol])) sec /= 1000;
+      else if (header && /us|µs/i.test(header[timeCol])) sec /= 1e6;
+      if (sec > 0) fs = 1 / sec;
+    }
+    const channels = valueCols.map(() => new Float32Array(rows.length));
+    for (let r = 0; r < rows.length; r++) {
+      for (let c = 0; c < valueCols.length; c++) channels[c][r] = isFinite(rows[r][valueCols[c]]) ? rows[r][valueCols[c]] : 0;
+    }
+    let unit = 'FS';
+    if (header && valueCols.some(i => /\(V\)|volts?|^v(out|in|rms)|V(out|in|rms)/i.test(header[i] || ''))) unit = 'V';
+    const sig = baseSignal(name || 'AP CSV', fs, channels, 'AP CSV');
+    sig.unit = unit;
+    sig.channelUnits = channels.map(() => unit);
+    sig.channelNames = valueCols.map((i, n) => header && header[i] ? header[i] : 'CH' + (n + 1));
+    sig.format = 'AP CSV';
+    return sig;
+  }
+
+  function decodeLogicCsv(header, rows, name) {
+    const find = re => header.findIndex(h => re.test(h));
+    const iB = find(/bclk|bit.?clock/i), iF = find(/fs|frame|lrck/i), iD = find(/data|din|dout/i);
+    if (iB < 0 || iF < 0 || iD < 0) throw new Error('逻辑 CSV 需要 BCLK/FS/DATA 列');
+    const b = rows.map(r => r[iB] > 0.5 ? 1 : 0);
+    const f = rows.map(r => r[iF] > 0.5 ? 1 : 0);
+    const d = rows.map(r => r[iD] > 0.5 ? 1 : 0);
+    const channels = [[], []];
+    let bits = [], lastFs = f[0], edgeCount = 0;
+    for (let i = 1; i < rows.length; i++) {
+      if (f[i] !== lastFs) {
+        if (bits.length) channels[lastFs ? 1 : 0].push(bitsToSigned(bits));
+        bits = []; lastFs = f[i];
+      }
+      if (!b[i - 1] && b[i]) {
+        bits.push(d[i]); edgeCount++;
+      }
+    }
+    if (bits.length) channels[lastFs ? 1 : 0].push(bitsToSigned(bits));
+    let max = 1;
+    channels.forEach(ch => { ch.forEach(v => { if (Math.abs(v) > max) max = Math.abs(v); }); });
+    const out = channels.filter(ch => ch.length).map(ch => {
+      const a = new Float32Array(ch.length);
+      for (let i = 0; i < ch.length; i++) a[i] = ch[i] / max;
+      return a;
+    });
+    const dur = rows.length > 1 ? Math.abs(rows[rows.length - 1][iB] - rows[0][iB]) : 1;
+    const sig = baseSignal(name || 'Logic CSV', 48000, out, '逻辑 CSV');
+    sig.format = '逻辑 CSV';
+    sig.bits = Math.round(edgeCount / Math.max(1, out.length));
+    return sig;
+  }
+
+  function bitsToSigned(bits) {
+    let v = 0;
+    for (const bit of bits) v = (v << 1) | bit;
+    const width = bits.length;
+    if (width && width < 32 && (v & (1 << (width - 1)))) v -= (1 << width);
+    return v;
+  }
+
+  function bitAt(bytes, bitPos, msbFirst) {
+    const idx = bitPos >> 3, off = bitPos & 7;
+    return msbFirst ? (bytes[idx] >> (7 - off)) & 1 : (bytes[idx] >> off) & 1;
+  }
+
+  function decodeRawDigital(buffer, cfg, name) {
+    const bytes = new Uint8Array(buffer);
+    const wordBits = Math.max(1, Math.min(32, cfg.wordBits || 16));
+    const slotCount = Math.max(1, Math.min(16, cfg.slots || 2));
+    const slotWidth = Math.max(wordBits, Math.min(64, cfg.slotWidth || wordBits));
+    const offset = Math.max(0, cfg.offset || 0);
+    const frameBits = slotCount * slotWidth;
+    const frames = Math.floor((bytes.length * 8 - offset) / frameBits);
+    const mode = cfg.mode || 'tdm';
+    if (mode === 'pdm') {
+      const bitCount = bytes.length * 8;
+      const decim = Math.max(1, cfg.decim || 64);
+      const len = Math.floor(bitCount / decim);
+      const out = new Float32Array(len);
+      let acc = 0;
+      for (let i = 0; i < len; i++) {
+        let sum = 0;
+        for (let k = 0; k < decim; k++) sum += bitAt(bytes, i * decim + k, true) ? 1 : -1;
+        acc += sum;
+        out[i] = acc / decim / 8;
+        acc *= 0.995;
+      }
+      const sig = baseSignal(name || 'PDM', cfg.sampleRate || 48000, [out], 'PDM');
+      sig.format = 'PDM';
+      return sig;
+    }
+    const channels = [];
+    const raws = [];
+    for (let s = 0; s < slotCount; s++) { channels.push(new Float32Array(frames)); raws.push(new Uint32Array(frames)); }
+    for (let f = 0; f < frames; f++) {
+      for (let s = 0; s < slotCount; s++) {
+        let start = offset + f * frameBits + s * slotWidth + (cfg.alignment === 'i2s' ? 1 : 0);
+        let v = 0;
+        for (let k = 0; k < wordBits; k++) {
+          const bit = bitAt(bytes, start + k, cfg.lsbFirst !== true);
+          if (cfg.lsbFirst) v |= bit << k; else v = (v << 1) | bit;
+        }
+        if (cfg.signed !== false) {
+          const sign = 1 << (wordBits - 1);
+          if (v & sign) v -= (1 << wordBits);
+        }
+        channels[s][f] = v / Math.pow(2, wordBits - 1);
+        raws[s][f] = v & ((1 << wordBits) - 1);
+      }
+    }
+    const sig = baseSignal(name || 'TDM', cfg.sampleRate || 48000, channels, '数字流');
+    sig.format = 'TDM / ' + wordBits + '-bit';
+    sig.rawWords = raws;
+    sig.rawBits = wordBits;
+    sig.bits = wordBits;
+    return sig;
+  }
+
+  function demoSignal() {
+    const fs = 48000, len = fs * 2;
+    const a = new Float32Array(len), b = new Float32Array(len), c = new Float32Array(len);
+    const ra = new Uint32Array(len), rb = new Uint32Array(len), rc = new Uint32Array(len);
+    for (let i = 0; i < len; i++) {
+      const t = i / fs;
+      a[i] = 0.5 * Math.sin(2 * Math.PI * 1000 * t) + 0.02 * Math.sin(2 * Math.PI * 3000 * t);
+      b[i] = 0.36 * Math.sin(2 * Math.PI * 2000 * t);
+      c[i] = 0.28 * Math.sin(2 * Math.PI * 500 * t);
+      ra[i] = Math.round(a[i] * 2147483647) >>> 0;
+      rb[i] = Math.round(b[i] * 2147483647) >>> 0;
+      rc[i] = Math.round(c[i] * 2147483647) >>> 0;
+    }
+    const sig = baseSignal('NSCLD demo · 3-channel test tone', fs, [a, b, c], '内置测试信号');
+    sig.bits = 32;
+    sig.rawBits = 32;
+    sig.rawWords = [ra, rb, rc];
+    sig.format = '内置测试信号';
+    return sig;
+  }
+
+  function exportWav(samples, sampleRate) {
+    const n = samples.length;
+    const buf = new ArrayBuffer(44 + n * 2);
+    const view = new DataView(buf);
+    const write = (o, s) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+    write(0, 'RIFF'); view.setUint32(4, 36 + n * 2, true); write(8, 'WAVE');
+    write(12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true); view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true); view.setUint16(34, 16, true);
+    write(36, 'data'); view.setUint32(40, n * 2, true);
+    for (let i = 0; i < n; i++) {
+      const v = Math.max(-1, Math.min(1, samples[i]));
+      view.setInt16(44 + i * 2, v < 0 ? v * 32768 : v * 32767, true);
+    }
+    return new Blob([buf], { type: 'audio/wav' });
+  }
+
+  F.parseWav = parseWav;
+  F.parseFlac = parseFlac;
+  F.parseCsv = parseCsv;
+  F.decodeRawDigital = decodeRawDigital;
+  F.demoSignal = demoSignal;
+  F.exportWav = exportWav;
+  F.baseSignal = baseSignal;
+  global.NSCLDFormats = F;
+})(window);
+
+</script>
+  <script>
+(function (global) {
+  'use strict';
+
+  const P = {};
+  const CHANNELS = ['#56c4ff', '#e8a838', '#7ec8a0', '#b09ee8', '#e89ab8'];
+
+  function css(name, fallback) {
+    const v = getComputedStyle(document.body).getPropertyValue(name).trim();
+    return v || fallback;
+  }
+
+  function colors() {
+    return {
+      back: css('--panel', '#1a1d24'),
+      plot: css('--bg', '#14161b'),
+      card: css('--card', '#20242d'),
+      grid: css('--grid', 'rgba(160,178,204,.12)'),
+      text: css('--text', '#e9edf5'),
+      muted: css('--muted', '#9aa5b8'),
+      dim: css('--dim', '#687386'),
+      accent: css('--accent', '#56c4ff'),
+      amber: css('--amber', '#e8a838'),
+      green: css('--green', '#7ec8a0'),
+      violet: css('--violet', '#b09ee8'),
+      line: css('--line', '#303744')
+    };
+  }
+
+  function font(size, weight, mono) {
+    return (weight || 400) + ' ' + size + 'px ' + (mono ? '"Cascadia Mono", Consolas, monospace' : '"Segoe UI Variable Text", "Segoe UI", sans-serif');
+  }
+
+  function niceTicks(lo, hi, count) {
+    const span = hi - lo;
+    if (!(span > 0)) return [lo];
+    const raw = span / Math.max(2, count);
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const n = raw / mag;
+    const step = (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * mag;
+    const out = [];
+    for (let v = Math.ceil(lo / step) * step; v <= hi + step * 1e-9; v += step) out.push(Math.abs(v) < step * 1e-9 ? 0 : v);
+    return out;
+  }
+
+  function logTicks(lo, hi) {
+    const out = [];
+    for (let d = Math.floor(Math.log10(Math.max(1, lo))); d <= Math.ceil(Math.log10(Math.max(10, hi))); d++) {
+      const v = Math.pow(10, d);
+      if (v >= lo && v <= hi) out.push(v);
+    }
+    if (lo <= 20 && hi >= 20) out.push(20);
+    if (lo <= 20000 && hi >= 20000) out.push(20000);
+    return [...new Set(out)].sort((a, b) => a - b);
+  }
+
+  function fmtTick(v) {
+    const a = Math.abs(v);
+    if (a >= 1e6) return (v / 1e6).toFixed(2).replace(/\.?0+$/, '') + 'M';
+    if (a >= 1e3) return (v / 1e3).toFixed(2).replace(/\.?0+$/, '') + 'k';
+    if (a >= 1) return v.toFixed(3).replace(/\.?0+$/, '');
+    if (a > 0) return v.toPrecision(2);
+    return '0';
+  }
+
+  function timeText(t) {
+    const a = Math.abs(t);
+    if (a >= 1) return t.toFixed(4).replace(/\.?0+$/, '') + ' s';
+    if (a >= 1e-3) return (t * 1e3).toFixed(2) + ' ms';
+    if (a >= 1e-6) return (t * 1e6).toFixed(2) + ' µs';
+    return (t * 1e9).toFixed(1) + ' ns';
+  }
+
+  class Plot {
+    constructor(canvas, app) {
+      this.canvas = canvas;
+      this.app = app;
+      this.ctx = canvas.getContext('2d');
+      this.w = 1; this.h = 1; this.dpr = 1;
+      this.resize = this.resize.bind(this);
+      new ResizeObserver(this.resize).observe(canvas);
+    }
+    resize() {
+      const r = this.canvas.getBoundingClientRect();
+      this.dpr = Math.min(2, window.devicePixelRatio || 1);
+      this.w = Math.max(1, r.width);
+      this.h = Math.max(1, r.height);
+      this.canvas.width = Math.round(this.w * this.dpr);
+      this.canvas.height = Math.round(this.h * this.dpr);
+      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      this.draw();
+    }
+    clear(c) {
+      const g = this.ctx;
+      g.clearRect(0, 0, this.w, this.h);
+      g.fillStyle = c.plot;
+      g.fillRect(0, 0, this.w, this.h);
+    }
+    text(s, x, y, opts) {
+      const g = this.ctx;
+      g.font = font((opts && opts.size) || 10, (opts && opts.weight) || 400, !!(opts && opts.mono));
+      g.fillStyle = (opts && opts.color) || colors().muted;
+      g.textAlign = (opts && opts.align) || 'left';
+      g.textBaseline = (opts && opts.baseline) || 'alphabetic';
+      g.fillText(s, x, y);
+    }
+    line(x0, y0, x1, y1, color, width, dash) {
+      const g = this.ctx;
+      g.save();
+      g.strokeStyle = color;
+      g.lineWidth = width || 1;
+      if (dash) g.setLineDash(dash);
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+      g.restore();
+    }
+    rect(x, y, w, h, fill, stroke) {
+      const g = this.ctx;
+      if (fill) { g.fillStyle = fill; g.fillRect(x, y, w, h); }
+      if (stroke) { g.strokeStyle = stroke; g.strokeRect(x, y, w, h); }
+    }
+    chip(s, x, y, color) {
+      const g = this.ctx;
+      g.font = font(9, 500, true);
+      const w = g.measureText(s).width + 12;
+      g.fillStyle = 'rgba(20,23,30,.82)';
+      g.fillRect(x, y, w, 18);
+      g.strokeStyle = color; g.globalAlpha = .35; g.strokeRect(x + .5, y + .5, w - 1, 17); g.globalAlpha = 1;
+      g.fillStyle = color; g.textAlign = 'left'; g.textBaseline = 'middle'; g.fillText(s, x + 6, y + 9);
+    }
+  }
+
+  class WaveformPlot extends Plot {
+    constructor(canvas, app) {
+      super(canvas, app);
+      this.state = app.state;
+      this.drag = null;
+      this.mid = null;
+      this.hover = null;
+      this.cursorColor = null;
+      canvas.addEventListener('pointerdown', e => this.down(e));
+      canvas.addEventListener('pointermove', e => this.move(e));
+      canvas.addEventListener('pointerup', e => this.up(e));
+      canvas.addEventListener('pointerleave', e => this.leave(e));
+      canvas.addEventListener('wheel', e => this.wheel(e), { passive: false });
+      canvas.addEventListener('contextmenu', e => { e.preventDefault(); });
+      canvas.addEventListener('pointerdown', e => { if (e.button === 2) e.preventDefault(); });
+      this.resize();
+    }
+    view() {
+      const s = this.state;
+      return { x0: s.waveX0, x1: s.waveX1 };
+    }
+    plotRect() { return { left: 62, top: 26, right: this.w - 12, bottom: this.h - 30 }; }
+    timeAt(x) {
+      const r = this.plotRect(), v = this.view();
+      return v.x0 + (x - r.left) / Math.max(1, r.right - r.left) * (v.x1 - v.x0);
+    }
+    xAt(t) {
+      const r = this.plotRect(), v = this.view();
+      return r.left + (t - v.x0) / Math.max(1e-12, v.x1 - v.x0) * (r.right - r.left);
+    }
+    laneAt(e) {
+      const sig = this.state.signal; if (!sig) return 0;
+      if (this.state.waveOverlay) return this.state.channel;
+      const r = this.plotRect();
+      const y = e.clientY - this.canvas.getBoundingClientRect().top;
+      if (y < r.top || y > r.bottom) return 0;
+      const c = Math.floor((y - r.top) / Math.max(1, (r.bottom - r.top) / sig.channelCount));
+      return Math.max(0, Math.min(sig.channelCount - 1, c));
+    }
+    laneRect(c) {
+      const sig = this.state.signal, r = this.plotRect();
+      if (!sig || this.state.waveOverlay) return r;
+      const n = Math.max(1, sig.channelCount), h = (r.bottom - r.top) / n;
+      const top = r.top + c * h;
+      return { left: r.left, right: r.right, top: top, bottom: c === n - 1 ? r.bottom : top + h };
+    }
+    rangeSignature() {
+      const s = this.state;
+      return [s.waveX0, s.waveX1, s.waveOverlay ? 1 : 0, s.channel, s.weighted ? 1 : 0,
+        s.fixedY ? JSON.stringify(s.fixedY) : ''].join('|');
+    }
+    prepareRanges() {
+      const s = this.state, sig = s.signal;
+      if (!sig) return;
+      const signature = this.rangeSignature();
+      if (this._rangeSignature === signature && this._rangeSignal === sig && this._rangeWeighted === s.weighted) return;
+      this._rangeSignature = signature;
+      this._rangeSignal = sig;
+      this._rangeWeighted = s.weighted;
+      this._rangeCache = [];
+      if (s.waveOverlay) {
+        const range = this.computeRange('overlay');
+        for (let c = 0; c < sig.channelCount; c++) this._rangeCache[c] = range;
+      } else {
+        for (let c = 0; c < sig.channelCount; c++) this._rangeCache[c] = this.computeRange(c);
+      }
+    }
+    computeRange(c) {
+      const s = this.state, sig = s.signal, key = s.waveOverlay ? 'overlay' : c;
+      if (s.fixedY && s.fixedY[key]) return s.fixedY[key];
+      const v = this.view();
+      const start = Math.max(0, Math.floor(v.x0 * sig.sampleRate));
+      const end = Math.min(sig.length, Math.ceil(v.x1 * sig.sampleRate));
+      const stride = Math.max(1, Math.floor((end - start) / 60000));
+      let lo = Infinity, hi = -Infinity;
+      const list = s.waveOverlay ? sig.channels : [sig.channels[c]];
+      for (let ch = 0; ch < list.length; ch++) {
+        const samples = list[ch];
+        for (let i = start; i < end; i += stride) { const x = samples[i]; if (x < lo) lo = x; if (x > hi) hi = x; }
+      }
+      if (s.weighted && (s.waveOverlay || c === s.channel)) {
+        const w = s.weighted;
+        for (let i = start; i < end; i += stride) { const x = w[i]; if (x < lo) lo = x; if (x > hi) hi = x; }
+      }
+      if (!isFinite(lo) || lo === hi) { lo = -1; hi = 1; }
+      const span = Math.max(hi - lo, 1e-9);
+      const pad = span * .12;
+      return [lo - pad, hi + pad];
+    }
+    rangeFor(c) {
+      if (!this.state.signal) return [-1, 1];
+      this.prepareRanges();
+      return this._rangeCache[c] || [-1, 1];
+    }
+    yAt(c, v, range, rect) {
+      const lr = rect || this.laneRect(c), r = range || this.rangeFor(c);
+      return lr.bottom - (v - r[0]) / Math.max(1e-12, r[1] - r[0]) * (lr.bottom - lr.top);
+    }
+    draw() {
+      const c = colors(), s = this.state;
+      this.clear(c);
+      if (!s.signal || !s.signal.channels.length) {
+        this.text('打开波形或载入内置测试信号', this.w / 2, this.h / 2, { align: 'center', color: c.dim, size: 13 });
+        return;
+      }
+      const sig = s.signal, r = this.plotRect(), v = this.view();
+      const laneCount = sig.channelCount;
+      const x0 = Math.max(0, Math.floor(v.x0 * sig.sampleRate));
+      const x1 = Math.min(sig.length, Math.ceil(v.x1 * sig.sampleRate));
+      const spp = (v.x1 - v.x0) * sig.sampleRate / Math.max(1, r.right - r.left);
+      const xTicks = niceTicks(v.x0, v.x1, 7);
+      const g = this.ctx;
+      this.prepareRanges();
+      g.save();
+      for (const t of xTicks) {
+        const x = this.xAt(t);
+        this.line(x, r.top, x, r.bottom, c.grid, 1);
+        this.text(fmtTick(t), x, r.bottom + 15, { size: 9, color: c.dim, align: 'center' });
+      }
+      for (let ch = 0; ch < laneCount; ch++) {
+        const lr = this.laneRect(ch);
+        const yr = this._rangeCache[ch] || [-1, 1];
+        const yPix = value => lr.bottom - (value - yr[0]) / Math.max(1e-12, yr[1] - yr[0]) * (lr.bottom - lr.top);
+        if (!s.waveOverlay && (ch & 1)) this.rect(lr.left, lr.top, lr.right - lr.left, lr.bottom - lr.top, 'rgba(255,255,255,.018)');
+        if (!s.waveOverlay || ch === 0) this.line(lr.left, lr.top, lr.right, lr.top, c.grid, 1);
+        if (!s.waveOverlay || ch === 0) {
+          const yTicks = niceTicks(yr[0], yr[1], 3);
+          for (const yv of yTicks) {
+            const y = yPix(yv);
+            this.line(lr.left, y, lr.right, y, c.grid, yv === 0 ? 1 : .7);
+            const ySpan = yr[1] - yr[0];
+            const dec = ySpan < 0.001 ? 6 : ySpan < 0.01 ? 4 : ySpan < 0.1 ? 3 : 2;
+            this.text((yv > 0 ? '+' : '') + yv.toFixed(dec), lr.left + 5, y, { size: 8, color: c.dim, mono: true });
+          }
+        }
+        const trace = sig.channels[ch];
+        g.beginPath();
+        const color = CHANNELS[ch % CHANNELS.length];
+        let started = false;
+        if (spp > 1.5) {
+          for (let x = r.left; x < r.right; x++) {
+            const i0 = Math.max(0, Math.floor(this.timeAt(x) * sig.sampleRate));
+            const i1 = Math.max(i0 + 1, Math.min(x1, Math.floor(this.timeAt(x + 1) * sig.sampleRate)));
+            let lo = Infinity, hi = -Infinity;
+            const stride = Math.max(1, Math.floor((i1 - i0) / 64));
+            for (let i = i0; i < i1; i += stride) { const q = trace[i]; if (q < lo) lo = q; if (q > hi) hi = q; }
+            if (!isFinite(lo)) continue;
+            const ya = yPix(hi), yb = yPix(lo);
+            if (!started) { g.moveTo(x, ya); started = true; }
+            g.lineTo(x, ya); g.lineTo(x, yb);
+          }
+        } else {
+          const i0 = Math.max(0, Math.floor(v.x0 * sig.sampleRate));
+          const i1 = Math.min(sig.length, Math.ceil(v.x1 * sig.sampleRate));
+          for (let i = i0; i < i1; i += Math.max(1, Math.floor((i1 - i0) / 4000))) {
+            const x = this.xAt(i / sig.sampleRate), y = yPix(trace[i]);
+            if (!started) { g.moveTo(x, y); started = true; } else g.lineTo(x, y);
+          }
+        }
+        g.globalAlpha = .86;
+        g.strokeStyle = color; g.lineWidth = 1.1; g.stroke();
+        g.globalAlpha = 1;
+        if (ch === s.channel && s.weighted) {
+          const w = s.weighted;
+          g.beginPath();
+          const ii0 = Math.max(0, Math.floor(v.x0 * sig.sampleRate));
+          const ii1 = Math.min(sig.length, Math.ceil(v.x1 * sig.sampleRate));
+          const step = Math.max(1, Math.floor((ii1 - ii0) / 5000));
+          for (let i = ii0; i < ii1; i += step) {
+            const x = this.xAt(i / sig.sampleRate), y = yPix(w[i]);
+            if (i === ii0) g.moveTo(x, y); else g.lineTo(x, y);
+          }
+          g.strokeStyle = c.amber; g.lineWidth = 1; g.setLineDash([4, 3]); g.stroke(); g.setLineDash([]);
+        }
+        const labelY = lr.top + 11;
+        const labelX = s.waveOverlay ? lr.left + 48 + ch * Math.min(92, (lr.right - lr.left - 56) / Math.max(1, laneCount)) : lr.left + 48;
+        this.text(sig.channelNames[ch] + '  [' + sig.channelUnits[ch] + ']', labelX, labelY, { size: 9, color: c.text, weight: 500 });
+        this.rect(labelX - 8, lr.top + 7, 5, 5, color, null);
+      }
+      const sel = s.selection;
+      if (sel && sel.count > 0) {
+        const xa = this.xAt(sel.start / sig.sampleRate), xb = this.xAt((sel.start + sel.count) / sig.sampleRate);
+        this.rect(Math.max(r.left, xa), r.top, Math.max(0, Math.min(r.right, xb) - Math.max(r.left, xa)), r.bottom - r.top, 'rgba(158,170,188,.13)');
+        this.line(Math.max(r.left, xa), r.top, Math.max(r.left, xa), r.bottom, 'rgba(200,206,216,.55)', 1, [4, 3]);
+      }
+      if (s.cursorA != null) this.cursor(s.cursorA, 'A', c.accent, false);
+      if (s.cursorB != null) this.cursor(s.cursorB, 'B', c.amber, true);
+      if (s.playhead != null) {
+        const x = this.xAt(s.playhead);
+        this.line(x, r.top, x, r.bottom, c.text, 1.4);
+        this.rect(x - 4, r.top, 8, 4, c.text, null);
+      }
+      if (this.mid && this.mid.drag) {
+        const xa = Math.min(this.mid.x0, this.mid.x1), xb = Math.max(this.mid.x0, this.mid.x1);
+        const ya = Math.min(this.mid.y0, this.mid.y1), yb = Math.max(this.mid.y0, this.mid.y1);
+        this.rect(xa, this.mid.shift ? ya : r.top, xb - xa, (this.mid.shift ? yb - ya : r.bottom - r.top), 'rgba(158,170,188,.13)');
+        this.line(xa, this.mid.shift ? ya : r.top, xa, this.mid.shift ? yb : r.bottom, 'rgba(200,206,216,.6)', 1, [4, 3]);
+        this.line(xb, this.mid.shift ? ya : r.top, xb, this.mid.shift ? yb : r.bottom, 'rgba(200,206,216,.6)', 1, [4, 3]);
+        if (this.mid.shift) {
+          this.line(xa, ya, xb, ya, 'rgba(200,206,216,.6)', 1, [4, 3]);
+          this.line(xa, yb, xb, yb, 'rgba(200,206,216,.6)', 1, [4, 3]);
+        }
+        const d = Math.abs(this.timeAt(xb) - this.timeAt(xa));
+        this.chip('Δt ' + timeText(d), xa + 4, (this.mid.shift ? ya : r.top) + 4, c.amber);
+      }
+      this.text(s.selection ? '选区 ' + timeText(s.selection.start / sig.sampleRate) + ' → ' + timeText((s.selection.start + s.selection.count) / sig.sampleRate) : '全记录', r.left, this.h - 7, { size: 9, color: c.dim, mono: true });
+      this.text(sig.sampleRate.toLocaleString() + ' Hz · ' + sig.length.toLocaleString() + ' samples', r.right, this.h - 7, { size: 9, color: c.dim, align: 'right', mono: true });
+      g.restore();
+    }
+    cursor(t, name, color, dashed) {
+      const r = this.plotRect(), x = this.xAt(t);
+      if (x < r.left || x > r.right) return;
+      this.line(x, r.top, x, r.bottom, color, 1, dashed ? [5, 3] : null);
+      const sig = this.state.signal;
+      const idx = Math.max(0, Math.min(sig.length - 1, Math.round(t * sig.sampleRate)));
+      const c = this.state.channel;
+      const data = c === this.state.channel && this.state.weighted ? this.state.weighted : sig.channels[c];
+      const v = data[idx];
+      this.chip(name + ' ' + timeText(t) + '  ' + v.toFixed(5) + (data === this.state.weighted ? ' (滤波)' : ''), x + 4, r.bottom - 22, color);
+    }
+    down(e) {
+      const sig = this.state.signal; if (!sig) return;
+      this.canvas.setPointerCapture(e.pointerId);
+      const local = this.local(e), r = this.plotRect();
+      if (e.button === 1) {
+        e.preventDefault();
+        const now = Date.now();
+        if (this._lastMiddle && now - this._lastMiddle < 360) {
+          this._lastMiddle = 0;
+          this.app.resetWaveView();
+          return;
+        }
+        this._lastMiddle = now;
+        this.mid = { drag: true, x0: local.x, x1: local.x, y0: local.y, y1: local.y, shift: e.shiftKey, lane: this.laneAt(e) };
+        return;
+      }
+      if (e.button === 2) {
+        this.drag = { type: 'select', x0: local.x, x1: local.x, start: this.timeAt(local.x), moved: false };
+        e.preventDefault();
+        return;
+      }
+      this.drag = { type: 'pan', x0: local.x, x1: local.x, startX: this.state.waveX0, endX: this.state.waveX1, moved: false, ctrl: e.ctrlKey };
+    }
+    move(e) {
+      const sig = this.state.signal; if (!sig) return;
+      const local = this.local(e);
+      if (this.drag) {
+        const dx = local.x - this.drag.x0;
+        if (Math.abs(dx) > 3) this.drag.moved = true;
+        if (this.drag.type === 'pan' && this.drag.moved) {
+          const span = this.drag.endX - this.drag.startX;
+          const delta = -dx / Math.max(1, this.plotRect().right - this.plotRect().left) * span;
+          const max = sig.duration;
+          let a = this.drag.startX + delta, b = this.drag.endX + delta;
+          if (a < 0) { b -= a; a = 0; }
+          if (b > max) { a -= b - max; b = max; }
+          this.state.waveX0 = Math.max(0, a); this.state.waveX1 = Math.min(max, b);
+          this.draw();
+        } else if (this.drag.type === 'select') {
+          this.drag.x1 = local.x;
+          const x0 = Math.min(this.drag.x0, local.x), x1 = Math.max(this.drag.x0, local.x);
+          this.state.selection = { start: Math.round(this.timeAt(x0) * sig.sampleRate), count: Math.max(1, Math.round((this.timeAt(x1) - this.timeAt(x0)) * sig.sampleRate)) };
+          this.draw();
+        }
+      }
+      if (this.mid && this.mid.drag) {
+        this.mid.x1 = local.x;
+        this.mid.y1 = local.y;
+        this.draw();
+      }
+      const t = this.timeAt(local.x);
+      const lane = this.laneAt(e);
+      if (this.state.fixedY) {
+        this.app.statusHover('t ' + timeText(t));
+      } else {
+        this.app.statusHover('t ' + timeText(t) + '  ' + sig.channelNames[lane]);
+      }
+    }
+    up(e) {
+      const sig = this.state.signal; if (!sig) return;
+      const local = this.local(e);
+      if (this.mid && this.mid.drag) {
+        this.mid.drag = false;
+        const dx = Math.abs(this.mid.x1 - this.mid.x0);
+        const dy = Math.abs(this.mid.y1 - this.mid.y0);
+        if (e.shiftKey && dy > 3) {
+          const lane = this.mid.lane, lr = this.laneRect(lane), yr = this.rangeFor(lane);
+          const ya = Math.min(this.mid.y0, this.mid.y1), yb = Math.max(this.mid.y0, this.mid.y1);
+          const vTop = yr[0] + (lr.bottom - ya) / Math.max(1, lr.bottom - lr.top) * (yr[1] - yr[0]);
+          const vBottom = yr[0] + (lr.bottom - yb) / Math.max(1, lr.bottom - lr.top) * (yr[1] - yr[0]);
+          if (!this.state.fixedY) this.state.fixedY = {};
+          this.state.fixedY[lane] = [Math.min(vTop, vBottom), Math.max(vTop, vBottom)];
+        } else if (dx > 3) {
+          const t0 = this.timeAt(Math.min(this.mid.x0, this.mid.x1));
+          const t1 = this.timeAt(Math.max(this.mid.x0, this.mid.x1));
+          const span = Math.max(1e-3, t1 - t0);
+          this.state.waveX0 = Math.max(0, Math.min(this.state.waveX0 + (t0 - this.state.waveX0), sig.duration - span));
+          this.state.waveX1 = this.state.waveX0 + span;
+        }
+        this.mid = null;
+        this.app.updateSelectionInfo();
+        this.draw();
+        return;
+      }
+      if (this.drag) {
+        if (this.drag.type === 'select') {
+          if (this.drag.moved) this.app.applySelection();
+          else this.app.showWaveMenu(e.clientX, e.clientY, this.laneAt(e));
+        } else if (!this.drag.moved) {
+          const t = this.timeAt(local.x);
+          if (e.ctrlKey) {
+            this.state.cursorB = t; this.app.setCursorLabel('B', 'A');
+          } else {
+            this.state.cursorA = t; this.app.setCursorLabel('A', 'A');
+          }
+          this.app.updateMeasurements();
+          this.draw();
+        }
+        this.drag = null;
+      }
+    }
+    leave() { if (!this.drag && !this.mid) this.app.statusHover(''); }
+    wheel(e) {
+      const sig = this.state.signal; if (!sig) return;
+      e.preventDefault();
+      const local = this.local(e), r = this.plotRect();
+      if (e.shiftKey) {
+        const lane = this.laneAt(e), lr = this.laneRect(lane), yr = this.rangeFor(lane);
+        const anchor = yr[0] + (lr.bottom - local.y) / Math.max(1, lr.bottom - lr.top) * (yr[1] - yr[0]);
+        const factor = e.deltaY > 0 ? 1.15 : .85;
+        const lo = anchor + (yr[0] - anchor) * factor, hi = anchor + (yr[1] - anchor) * factor;
+        if (!this.state.fixedY) this.state.fixedY = {};
+        this.state.fixedY[lane] = [lo, hi];
+      } else {
+        const factor = e.deltaY > 0 ? 1.15 : .85;
+        const anchor = this.timeAt(local.x);
+        let a = anchor + (this.state.waveX0 - anchor) * factor;
+        let b = anchor + (this.state.waveX1 - anchor) * factor;
+        a = Math.max(0, a); b = Math.min(sig.duration, b);
+        if (b - a > 1e-7) { this.state.waveX0 = a; this.state.waveX1 = b; }
+      }
+      this.app.updateSelectionInfo();
+      this.draw();
+    }
+    local(e) { const r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    localY(e) { return e.clientY - this.canvas.getBoundingClientRect().top; }
+  }
+
+  class SpectrumPlot extends Plot {
+    constructor(canvas, app) {
+      super(canvas, app);
+      this.hover = null;
+      this.drag = null;
+      this.state = app.state;
+      canvas.addEventListener('pointermove', e => this.move(e));
+      canvas.addEventListener('pointerleave', () => { this.hover = null; this.app.statusHover(''); this.draw(); });
+      canvas.addEventListener('wheel', e => this.wheel(e), { passive: false });
+      canvas.addEventListener('pointerdown', e => this.down(e));
+      canvas.addEventListener('pointerup', e => this.up(e));
+      canvas.addEventListener('contextmenu', e => { e.preventDefault(); this.app.showSpectrumMenu(e.clientX, e.clientY); });
+      canvas.addEventListener('dblclick', () => this.app.resetSpectrumView());
+      this.resize();
+    }
+    plotRect() { return { left: 62, top: 48, right: this.w - 14, bottom: this.h - 30 }; }
+    xAt(f) {
+      const r = this.plotRect();
+      if (this.state.logX) {
+        const a = Math.log10(Math.max(1, this.state.specX0)), b = Math.log10(Math.max(10, this.state.specX1));
+        return r.left + (Math.log10(Math.max(1, f)) - a) / Math.max(1e-9, b - a) * (r.right - r.left);
+      }
+      return r.left + (f - this.state.specX0) / Math.max(1e-9, this.state.specX1 - this.state.specX0) * (r.right - r.left);
+    }
+    fAt(x) {
+      const r = this.plotRect(), t = (x - r.left) / Math.max(1, r.right - r.left);
+      if (this.state.logX) {
+        const a = Math.log10(Math.max(1, this.state.specX0)), b = Math.log10(Math.max(10, this.state.specX1));
+        return Math.pow(10, a + t * (b - a));
+      }
+      return this.state.specX0 + t * (this.state.specX1 - this.state.specX0);
+    }
+    laneRect(c, n) {
+      const r = this.plotRect();
+      if (!this.state.specStacked || n <= 1) return r;
+      const top = r.top + 20, h = (r.bottom - top) / n;
+      return { left: r.left, right: r.right, top: top + c * h, bottom: c === n - 1 ? r.bottom : top + (c + 1) * h };
+    }
+    draw() {
+      const c = colors(), s = this.state;
+      this.clear(c);
+      const specs = s.specs || [];
+      if (!specs.length || !specs[0]) {
+        this.text('载入信号后进行 FFT 分析', this.w / 2, this.h / 2, { align: 'center', color: c.dim, size: 13 });
+        return;
+      }
+      const g = this.ctx, r = this.plotRect();
+      const n = specs.length;
+      const stack = s.specStacked && n > 1;
+      const y0 = -150, y1 = s.specY1 || 10;
+      const yAt = y => r.bottom - (y - y0) / Math.max(1e-9, y1 - y0) * (r.bottom - r.top);
+      const xTicks = s.logX ? logTicks(s.specX0, s.specX1) : niceTicks(s.specX0, s.specX1, 7);
+      for (const f of xTicks) {
+        const x = this.xAt(f);
+        this.line(x, r.top, x, r.bottom, c.grid, .7);
+        this.text(fmtTick(f), x, r.bottom + 15, { size: 9, color: c.dim, align: 'center', mono: true });
+      }
+      const yTicks = niceTicks(y0, y1, 7);
+      for (const yv of yTicks) {
+        const yy = yAt(yv);
+        this.line(r.left, yy, r.right, yy, c.grid, .7);
+        this.text(yv.toFixed(0), r.left - 8, yy + 3, { size: 8, color: c.dim, align: 'right', mono: true });
+      }
+      for (let ch = 0; ch < n; ch++) {
+        const sp = specs[ch]; if (!sp || !sp.valid) continue;
+        const lane = this.laneRect(ch, n);
+        const laneY = y => stack ? lane.bottom - (y - y0) / Math.max(1e-9, y1 - y0) * (lane.bottom - lane.top) : yAt(y);
+        const color = CHANNELS[ch % CHANNELS.length];
+        g.save();
+        g.beginPath();
+        let started = false;
+        const pixelWidth = Math.max(1, Math.round(r.right - r.left));
+        for (let px = 0; px <= pixelWidth; px++) {
+          const x = r.left + px;
+          const fa = this.fAt(x), fb = this.fAt(Math.min(r.right, x + 1));
+          let i0 = Math.max(1, Math.floor(Math.min(fa, fb) / sp.binHz));
+          let i1 = Math.min(sp.freq.length - 1, Math.ceil(Math.max(fa, fb) / sp.binHz));
+          if (i1 < i0) i1 = i0;
+          let peak = -Infinity;
+          for (let i = i0; i <= i1; i++) if (sp.db[i] > peak) peak = sp.db[i];
+          if (!isFinite(peak)) continue;
+          const yy = laneY(peak);
+          if (!started) { g.moveTo(x, yy); started = true; } else g.lineTo(x, yy);
+        }
+        g.strokeStyle = color; g.lineWidth = 1.15; g.stroke();
+        g.restore();
+        if (stack) {
+          this.rect(lane.left + 7, lane.top + 7, 10, 3, color);
+          this.text(s.signal.channelNames[ch] + ' [' + s.signal.channelUnits[ch] + ']', lane.left + 22, lane.top + 10, { size: 9, color: c.text });
+        }
+        if (sp.valid) {
+          const x = this.xAt(sp.fundamentalHz), yy = laneY(sp.fundamentalDb);
+          this.ctx.beginPath(); this.ctx.arc(x, yy, 3, 0, Math.PI * 2); this.ctx.fillStyle = c.green; this.ctx.fill();
+          this.text('F0', x + 4, yy - 6, { size: 8, color: c.green, mono: true });
+        }
+      }
+      if (!stack && n > 1) {
+        let x = r.right - 8;
+        for (let ch = n - 1; ch >= 0; ch--) {
+          const label = s.signal.channelNames[ch] + ' [' + s.signal.channelUnits[ch] + ']';
+          this.ctx.font = font(9, 400, true);
+          const w = this.ctx.measureText(label).width + 16;
+          this.rect(x - w, r.top + 8, w, 16, 'rgba(20,23,30,.6)');
+          this.rect(x - w + 5, r.top + 14, 7, 3, CHANNELS[ch % CHANNELS.length]);
+          this.text(label, x - w + 16, r.top + 20, { size: 9, color: c.text, mono: true });
+          x -= w + 8;
+        }
+      }
+      if (this.hover) this.drawSnap(this.hover, specs, n, stack, y0, y1, yAt);
+      const sp = s.spec || specs[0];
+      this.text('FFT ' + (sp.fftSize || '—') + '  Δf ' + (sp.binHz ? sp.binHz.toFixed(3) : '—') + ' Hz  ' + (sp.window || '') + '  ' + (sp.segments || 0) + ' 段' + (sp.weighting ? '  ' + sp.weighting + ' 加权' : ''), r.left, 18, { size: 10, color: c.muted, mono: true });
+      this.text(s.logX ? '对数频率' : '线性频率', r.left, this.h - 7, { size: 9, color: c.dim, mono: true });
+      this.text('dBFS', 14, r.top + (r.bottom - r.top) / 2, { size: 9, color: c.dim, align: 'center', baseline: 'middle' });
+    }
+    drawSnap(h, specs, n, stack, y0, y1, yAt) {
+      const sp = specs[h.ch]; if (!sp || !sp.valid) return;
+      const lane = this.laneRect(h.ch, n);
+      const y = stack ? lane.bottom - (h.db - y0) / Math.max(1e-9, y1 - y0) * (lane.bottom - lane.top) : yAt(h.db);
+      const x = this.xAt(h.f);
+      this.line(x, this.plotRect().top, x, this.plotRect().bottom, colors().accent, 1, [4, 3]);
+      this.line(this.plotRect().left, y, this.plotRect().right, y, colors().accent, 1, [4, 3]);
+      this.ctx.beginPath(); this.ctx.arc(x, y, 4, 0, Math.PI * 2); this.ctx.fillStyle = colors().accent; this.ctx.fill();
+      const label = (n > 1 && !stack ? AppChannelName(this.app, h.ch) + '  ' : '') + h.f.toFixed(2) + ' Hz  ' + h.db.toFixed(2) + ' dB';
+      this.chip(label, Math.min(x + 10, this.w - 190), Math.max(y - 24, this.plotRect().top + 2), colors().accent);
+    }
+    move(e) {
+      const specs = this.state.specs || []; if (!specs.length) return;
+      const local = this.local(e);
+      if (this.drag) {
+        const dx = local.x - this.drag.x;
+        if (Math.abs(dx) > 2) {
+          const f = this.factor(dx);
+          const a = this.drag.f0 * f, b = this.drag.f1 * f;
+          this.state.specX0 = Math.max(1, a); this.state.specX1 = b; this.draw();
+        }
+        return;
+      }
+      const r = this.plotRect();
+      if (local.x < r.left || local.x > r.right || local.y < r.top || local.y > r.bottom) { this.hover = null; this.draw(); return; }
+      const f = this.fAt(local.x);
+      const stack = this.state.specStacked && specs.length > 1;
+      let best = null, bestD = 48 * 48;
+      for (let ch = 0; ch < specs.length; ch++) {
+        const sp = specs[ch]; if (!sp || !sp.valid) continue;
+        if (stack && ch !== this.state.channel) continue;
+        const lane = this.laneRect(ch, specs.length);
+        const y0 = -150, y1 = this.state.specY1 || 10;
+        let lo = 1, hi = sp.freq.length - 1;
+        const fa = this.fAt(local.x - 48), fb = this.fAt(local.x + 48);
+        lo = Math.max(1, Math.floor(Math.min(fa, fb) / sp.binHz));
+        hi = Math.min(hi, Math.ceil(Math.max(fa, fb) / sp.binHz));
+        for (let i = lo; i <= hi; i++) {
+          const xx = this.xAt(sp.freq[i]);
+          const yy = stack ? lane.bottom - (sp.db[i] - y0) / Math.max(1e-9, y1 - y0) * (lane.bottom - lane.top) : r.bottom - (sp.db[i] - y0) / Math.max(1e-9, y1 - y0) * (r.bottom - r.top);
+          const d = (xx - local.x) ** 2 + (yy - local.y) ** 2;
+          if (d < bestD) { bestD = d; best = { ch: ch, i: i, f: sp.freq[i], db: sp.db[i] }; }
+        }
+      }
+      this.hover = best;
+      if (best) this.app.statusHover((specs.length > 1 ? 'CH' + (best.ch + 1) + '  ' : '') + best.f.toFixed(2) + ' Hz  ' + best.db.toFixed(2) + ' dB');
+      else this.app.statusHover('f ' + fmtTick(f) + ' Hz');
+      this.draw();
+    }
+    down(e) {
+      if (!this.state.specs || !this.state.specs.length) return;
+      const local = this.local(e);
+      if (e.button === 2) return;
+      this.drag = { x: local.x, f0: this.state.specX0, f1: this.state.specX1 };
+    }
+    up() { this.drag = null; }
+    factor(dx) {
+      const base = this.state.logX
+        ? Math.pow(this.state.specX1 / this.state.specX0, -dx / Math.max(160, this.plotRect().right - this.plotRect().left))
+        : Math.exp(-dx / Math.max(160, this.plotRect().right - this.plotRect().left) * 3);
+      return Math.max(0.7, Math.min(1.4, base));
+    }
+    wheel(e) {
+      e.preventDefault();
+      const local = this.local(e), f = this.fAt(local.x);
+      const factor = e.deltaY > 0 ? 1.15 : .85;
+      let a = f + (this.state.specX0 - f) * factor, b = f + (this.state.specX1 - f) * factor;
+      a = Math.max(this.state.logX ? 20 : 0, a);
+      if (this.state.specs && this.state.specs[0]) b = Math.min(b, this.state.specs[0].freq[this.state.specs[0].freq.length - 1]);
+      if (b - a > 1) { this.state.specX0 = a; this.state.specX1 = b; this.draw(); }
+    }
+    local(e) { const r = this.canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+  }
+
+  function AppChannelName(app, ch) {
+    const sig = app.state.signal;
+    return sig && sig.channelNames ? sig.channelNames[ch] : 'CH' + (ch + 1);
+  }
+
+  class JitterPlot extends Plot {
+    constructor(canvas, app) { super(canvas, app); this.state = app.state; this.resize(); }
+    draw() {
+      const c = colors(), s = this.state, j = s.jitter;
+      this.clear(c);
+      const r = { left: 58, top: 34, right: this.w - 16, bottom: this.h - 30 };
+      for (let i = 0; i <= 6; i++) {
+        const y = r.top + (r.bottom - r.top) * i / 6;
+        this.line(r.left, y, r.right, y, c.grid, .7);
+      }
+      if (!j || !j.valid) {
+        this.text('载入准周期信号后显示周期抖动', this.w / 2, this.h / 2, { align: 'center', color: c.dim, size: 13 });
+        return;
+      }
+      const errs = j.trend.map(t => t.error / Math.max(1, j.meanPeriod));
+      const showTrend = document.getElementById('jitterTrend').checked;
+      let maxAbs = 1e-12; errs.forEach(v => maxAbs = Math.max(maxAbs, Math.abs(v)));
+      if (showTrend) {
+        const tx = i => r.left + i / Math.max(1, errs.length - 1) * (r.right - r.left);
+        const ty = v => (r.top + r.bottom) / 2 - v / maxAbs * (r.bottom - r.top) * .42;
+        this.line(r.left, ty(0), r.right, ty(0), c.grid, 1);
+        const rmsRel = j.meanPeriod > 0 ? j.rmsPeriod / j.meanPeriod : 0;
+        this.line(r.left, ty(rmsRel), r.right, ty(rmsRel), c.amber, 1, [5, 4]);
+        this.line(r.left, ty(-rmsRel), r.right, ty(-rmsRel), c.amber, 1, [5, 4]);
+        this.text('+' + (maxAbs * 100).toFixed(3) + '%', r.left - 8, r.top + 4, { size: 8, color: c.dim, align: 'right', mono: true });
+        this.text('0', r.left - 8, ty(0) + 3, { size: 8, color: c.dim, align: 'right', mono: true });
+        this.text('-' + (maxAbs * 100).toFixed(3) + '%', r.left - 8, r.bottom, { size: 8, color: c.dim, align: 'right', mono: true });
+        const stride = Math.max(1, Math.floor(errs.length / 2400));
+        this.ctx.save();
+        this.ctx.globalAlpha = .62;
+        for (let i = 0; i < errs.length; i += stride) {
+          const v = errs[i];
+          this.ctx.beginPath();
+          this.ctx.arc(tx(i), ty(v), Math.abs(v) > rmsRel * 3 ? 1.7 : 1, 0, Math.PI * 2);
+          this.ctx.fillStyle = Math.abs(v) > rmsRel * 3 ? c.amber : c.accent;
+          this.ctx.fill();
+        }
+        this.ctx.restore();
+        for (let i = 0; i <= 4; i++) {
+          const x = r.left + (r.right - r.left) * i / 4;
+          this.line(x, r.top, x, r.bottom, c.grid, .5);
+          this.text(String(Math.round(errs.length * i / 4)), x, r.bottom + 13, { size: 8, color: c.dim, align: 'center', mono: true });
+        }
+        this.text('周期序号 →', r.right, this.h - 7, { size: 9, color: c.dim, align: 'right', mono: true });
+      } else {
+        const bins = 56, counts = new Uint32Array(bins);
+        for (const v of errs) counts[Math.max(0, Math.min(bins - 1, Math.floor((v / maxAbs + 1) * .5 * bins)))]++;
+        let peak = 1; counts.forEach(v => peak = Math.max(peak, v));
+        const bw = (r.right - r.left) / bins;
+        for (let i = 0; i < bins; i++) {
+          const h = counts[i] / peak * (r.bottom - r.top);
+          this.ctx.fillStyle = i === (bins >> 1) ? c.amber : 'rgba(86,196,255,.55)';
+          this.ctx.fillRect(r.left + i * bw + 1, r.bottom - h, Math.max(1, bw - 2), h);
+        }
+        this.line((r.left + r.right) / 2, r.top, (r.left + r.right) / 2, r.bottom, c.grid, 1);
+        this.text('相对周期误差分布 · ±' + (maxAbs * 100).toFixed(3) + '%', r.left, this.h - 7, { size: 9, color: c.dim, mono: true });
+      }
+      this.text('周期抖动 RMS ' + (j.rmsPeriod * 1e12).toFixed(2) + ' ps   P-P ' + (j.ppPeriod * 1e12).toFixed(2) + ' ps   f0 ' + j.f0.toFixed(2) + ' Hz', r.left, 18, { size: 10, color: c.muted, mono: true });
+    }
+  }
+
+  P.WaveformPlot = WaveformPlot;
+  P.SpectrumPlot = SpectrumPlot;
+  P.JitterPlot = JitterPlot;
+  P.timeText = timeText;
+  P.fmtTick = fmtTick;
+  P.channelColors = CHANNELS;
+  global.NSCLDPlots = P;
+})(window);
+
+</script>
+  <script>
+(function (global) {
+  'use strict';
+
+  const B = {};
+  const channelColors = ['#56c4ff', '#e8a838', '#7ec8a0', '#b09ee8', '#e89ab8'];
+
+  function el(tag, attrs, html) {
+    const n = document.createElement(tag);
+    if (attrs) for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (html != null) n.innerHTML = html;
+    return n;
+  }
+
+  class BitFieldDiagram {
+    constructor(canvas, app) {
+      this.canvas = canvas;
+      this.app = app;
+      this.ctx = canvas.getContext('2d');
+      this.resize = this.resize.bind(this);
+      new ResizeObserver(this.resize).observe(canvas);
+      this.resize();
+    }
+    resize() {
+      const r = this.canvas.getBoundingClientRect();
+      this.dpr = Math.min(2, devicePixelRatio || 1);
+      this.w = Math.max(1, r.width); this.h = Math.max(1, r.height);
+      this.canvas.width = Math.round(this.w * this.dpr);
+      this.canvas.height = Math.round(this.h * this.dpr);
+      this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      this.draw();
+    }
+    draw() {
+      const c = getComputedStyle(document.body);
+      const text = c.getPropertyValue('--text').trim() || '#e9edf5';
+      const muted = c.getPropertyValue('--muted').trim() || '#9aa5b8';
+      const dim = c.getPropertyValue('--dim').trim() || '#687386';
+      const line = c.getPropertyValue('--line').trim() || '#303744';
+      const accent = c.getPropertyValue('--accent').trim() || '#56c4ff';
+      const amber = c.getPropertyValue('--amber').trim() || '#e8a838';
+      const g = this.ctx;
+      g.clearRect(0, 0, this.w, this.h);
+      g.fillStyle = c.getPropertyValue('--panel').trim() || '#1a1d24';
+      g.fillRect(0, 0, this.w, this.h);
+      const fields = this.app.state.bitFields || [];
+      const bits = this.app.state.bitWordBits || 32;
+      if (!fields.length) {
+        g.fillStyle = dim; g.font = '12px "Segoe UI", sans-serif'; g.textAlign = 'center';
+        g.fillText('添加字段后显示位域图解', this.w / 2, this.h / 2);
+        return;
+      }
+      const left = 34, right = this.w - 34;
+      const cellW = (right - left) / bits;
+      const top = 27;
+      const laneH = 26;
+      const gap = 4;
+      const lanes = this.layout(fields, bits);
+      const laneCount = Math.max(1, ...lanes) + 1;
+      const gridBottom = top + laneCount * (laneH + gap) - gap;
+      g.fillStyle = 'rgba(255,255,255,.035)';
+      for (let r = 0; r < laneCount; r++) {
+        const y = top + r * (laneH + gap);
+        g.fillRect(left, y, right - left, laneH);
+      }
+      g.strokeStyle = line; g.lineWidth = .5;
+      for (let b = 0; b <= bits; b++) {
+        const x = left + b * cellW;
+        g.globalAlpha = b % 4 === 0 ? .8 : .32;
+        g.beginPath(); g.moveTo(x, top - 3); g.lineTo(x, gridBottom); g.stroke();
+      }
+      g.globalAlpha = 1;
+      g.font = '8px "Cascadia Mono", Consolas, monospace'; g.textAlign = 'center'; g.fillStyle = dim;
+      for (let b = 0; b < bits; b++) {
+        if (bits <= 16 || b % 4 === 0 || b === bits - 1) {
+          const x = left + (bits - 1 - b + .5) * cellW;
+          g.fillText(String(b), x, gridBottom + 13);
+        }
+      }
+      g.textAlign = 'left'; g.fillStyle = muted;
+      g.fillText('MSB · ' + (bits - 1), left, 12);
+      g.textAlign = 'right';
+      g.fillText('LSB · 0', right, 12);
+      const groups = this.overlapGroups(fields, bits);
+      const overlapRows = {};
+      groups.forEach(gr => gr.forEach(i => overlapRows[i] = true));
+      for (let i = 0; i < fields.length; i++) {
+        const f = fields[i];
+        const range = normalizeFieldRange(f, bits);
+        const start = range.start;
+        const width = range.width;
+        const displayStart = bits - 1 - start;
+        const x = left + displayStart * cellW + 2;
+        const w = Math.max(3, width * cellW - 4);
+        const lane = lanes[i];
+        const y = top + (laneCount - 1 - lane) * (laneH + gap) + 3;
+        const color = channelColors[i % channelColors.length];
+        g.globalAlpha = .17; g.fillStyle = color; g.fillRect(x, y, w, laneH - 6); g.globalAlpha = 1;
+        g.strokeStyle = overlapRows[i] ? amber : (f.msbFirst === false ? amber : color);
+        g.lineWidth = 1.2;
+        g.strokeRect(x + .5, y + .5, w - 1, laneH - 7);
+        if (f.msbFirst === false) {
+          g.strokeStyle = amber; g.globalAlpha = .7;
+          g.beginPath(); g.moveTo(x + w - 8, y + 5); g.lineTo(x + w - 3, y + 5); g.lineTo(x + w - 3, y + 10); g.stroke(); g.globalAlpha = 1;
+        }
+        const label = (f.name || 'field') + (f.signed ? ' ±' : ' U') + '  [' + start + '..' + range.end + '] W' + width;
+        g.font = '9px "Cascadia Mono", Consolas, monospace';
+        g.fillStyle = text;
+        g.textAlign = 'left';
+        const max = Math.max(1, Math.floor((w - 8) / 5.5));
+        g.fillText(label.length > max ? (f.name || 'field') + ' · ' + start + ':' + width : label, x + 4, y + 14);
+      }
+      if (laneCount > 1) {
+        g.font = '8px "Cascadia Mono", Consolas, monospace'; g.fillStyle = dim; g.textAlign = 'right';
+        g.fillText('重叠字段自动分行', right, 12);
+      }
+    }
+    layout(fields, bits) {
+      const lanes = [];
+      const ranges = fields.map(f => {
+        const range = normalizeFieldRange(f, bits);
+        return [range.end, range.start];
+      });
+      for (let i = 0; i < fields.length; i++) {
+        let lane = 0;
+        for (; lane < 8; lane++) {
+          let ok = true;
+          for (let j = 0; j < i; j++) {
+            if (lanes[j] !== lane) continue;
+            if (!(ranges[i][1] < ranges[j][0] || ranges[i][0] > ranges[j][1])) { ok = false; break; }
+          }
+          if (ok) break;
+        }
+        lanes.push(Math.min(7, lane));
+      }
+      return lanes;
+    }
+    overlapGroups(fields, bits) {
+      const out = [];
+      const ranges = fields.map(f => {
+        const range = normalizeFieldRange(f, bits);
+        return [range.end, range.start];
+      });
+      for (let i = 0; i < fields.length; i++) {
+        for (let j = i + 1; j < fields.length; j++) {
+          if (!(ranges[i][1] < ranges[j][0] || ranges[i][0] > ranges[j][1])) out.push([i, j]);
+        }
+      }
+      return out;
+    }
+  }
+
+  class BitFieldEditor {
+    constructor(app) {
+      this.app = app;
+      this.body = document.getElementById('bitFieldsBody');
+      this.wordBitsInput = document.getElementById('bitWordBits');
+      this.unitInput = document.getElementById('bitUnit');
+      this.normalizeCheck = document.getElementById('bitNormalize');
+      this.visibleCheck = document.getElementById('bitDiagramVisible');
+      this.meta = document.getElementById('bitMeta');
+      this.error = document.getElementById('bitError');
+      this.diagram = new BitFieldDiagram(document.getElementById('bitDiagram'), app);
+      this.selected = 0;
+      this.events();
+      this.syncControls();
+      this.render();
+    }
+    events() {
+      this.body.addEventListener('input', e => this.onEdit(e));
+      this.body.addEventListener('change', e => this.onEdit(e));
+      this.body.addEventListener('click', e => {
+        const tr = e.target.closest('tr');
+        if (tr) this.selected = Number(tr.dataset.index);
+      });
+      this.body.addEventListener('dblclick', e => e.preventDefault());
+      this.wordBitsInput.addEventListener('change', () => {
+        this.app.state.bitWordBits = Math.max(4, Math.min(32, Number(this.wordBitsInput.value) || 32));
+        this.wordBitsInput.value = this.app.state.bitWordBits;
+        this.clampFields();
+        this.save();
+      });
+      this.unitInput.addEventListener('input', () => { this.app.state.bitUnit = this.unitInput.value || 'FS'; this.save(); });
+      this.normalizeCheck.addEventListener('change', () => {
+        const v = this.normalizeCheck.checked;
+        this.app.state.bitFields.forEach(f => f.normalize = v);
+        this.render();
+        this.save();
+      });
+      this.visibleCheck.addEventListener('change', () => {
+        document.getElementById('bitDiagramWrap').classList.toggle('hidden', !this.visibleCheck.checked);
+        this.app.state.bitDiagramVisible = this.visibleCheck.checked;
+        this.save();
+      });
+      document.getElementById('bitAddRow').addEventListener('click', () => this.addRow());
+      document.getElementById('bitRemoveRow').addEventListener('click', () => this.removeRow());
+      document.getElementById('bitApply').addEventListener('click', () => {
+        const fields = this.read();
+        if (!fields) return;
+        this.app.applyBitFields(fields);
+      });
+      document.getElementById('bitRestore').addEventListener('click', () => this.app.restoreOriginal());
+    }
+    syncControls() {
+      this.wordBitsInput.value = this.app.state.bitWordBits;
+      this.unitInput.value = this.app.state.bitUnit;
+      this.visibleCheck.checked = this.app.state.bitDiagramVisible !== false;
+      document.getElementById('bitDiagramWrap').classList.toggle('hidden', !this.visibleCheck.checked);
+    }
+    defaultFields() {
+      const bits = this.app.state.bitWordBits || 32;
+      return [{ name: 'DATA', start: bits - 1, width: Math.min(16, bits), signed: true, scale: 1, offset: 0, full: 0, unit: this.app.state.bitUnit || 'FS', normalize: true, msbFirst: true }];
+    }
+    ensure() {
+      if (!Array.isArray(this.app.state.bitFields) || !this.app.state.bitFields.length) this.app.state.bitFields = this.defaultFields();
+      if (!this.app.state.bitWordBits) this.app.state.bitWordBits = 32;
+    }
+    render() {
+      this.ensure();
+      const bits = this.app.state.bitWordBits;
+      const overlaps = this.overlapRows();
+      this.body.innerHTML = '';
+      this.app.state.bitFields.forEach((f, i) => {
+        const tr = el('tr', { 'data-index': i });
+        if (overlaps[i]) tr.className = 'overlap';
+        if (this.selected === i) tr.style.outline = '1px solid var(--accent)';
+        tr.innerHTML =
+          '<td><input data-key="name" type="text" value="' + esc(f.name) + '"></td>' +
+          '<td><input data-key="start" type="number" min="0" max="' + (bits - 1) + '" value="' + (f.start | 0) + '"></td>' +
+          '<td><input data-key="width" type="number" min="1" max="' + bits + '" value="' + (f.width | 0) + '"></td>' +
+          '<td><select data-key="signed"><option value="0"' + (f.signed ? '' : ' selected') + '>U</option><option value="1"' + (f.signed ? ' selected' : '') + '>±</option></select></td>' +
+          '<td><input data-key="scale" type="number" step="any" value="' + fmt(f.scale) + '"></td>' +
+          '<td><input data-key="offset" type="number" step="any" value="' + fmt(f.offset) + '"></td>' +
+          '<td><input data-key="full" type="number" step="any" value="' + fmt(f.full) + '"></td>' +
+          '<td><input data-key="unit" type="text" value="' + esc(f.unit) + '"></td>' +
+          '<td><input data-key="normalize" type="checkbox"' + (f.normalize ? ' checked' : '') + '></td>' +
+          '<td><select data-key="msbFirst"><option value="1"' + (f.msbFirst ? ' selected' : '') + '>MSB</option><option value="0"' + (!f.msbFirst ? ' selected' : '') + '>LSB</option></select></td>' +
+          '<td class="overlap-badge">' + (overlaps[i] ? '⚠ 重叠' : '') + '</td>';
+        this.body.appendChild(tr);
+      });
+      this.meta.textContent = bits + '-bit · ' + this.app.state.bitFields.length + ' 字段 · 起始为实际 bit 号';
+      this.normalizeCheck.checked = this.app.state.bitFields.every(f => f.normalize);
+      this.diagram.draw();
+    }
+    overlapRows() {
+      const out = {};
+      const f = this.app.state.bitFields;
+      const bits = this.app.state.bitWordBits || 32;
+      const ranges = f.map(x => normalizeFieldRange(x, bits));
+      for (let i = 0; i < f.length; i++) {
+        for (let j = i + 1; j < f.length; j++) {
+          if (!(ranges[i].start < ranges[j].end || ranges[j].start < ranges[i].end)) { out[i] = true; out[j] = true; }
+        }
+      }
+      return out;
+    }
+    onEdit(e) {
+      const input = e.target;
+      if (!input.dataset || !input.dataset.key) return;
+      const tr = input.closest('tr');
+      const idx = Number(tr.dataset.index);
+      const f = this.app.state.bitFields[idx];
+      const key = input.dataset.key;
+      if (key === 'name') f.name = input.value;
+      else if (key === 'unit') f.unit = input.value;
+      else if (key === 'normalize') f.normalize = input.checked;
+      else if (key === 'signed') f.signed = input.value === '1';
+      else if (key === 'msbFirst') f.msbFirst = input.value === '1';
+      else {
+        let v = parseFloat(input.value);
+        if (!isFinite(v)) v = 0;
+        if (key === 'start') {
+          f.start = Math.max(0, Math.min(this.app.state.bitWordBits - 1, Math.round(v)));
+          input.value = f.start;
+        } else if (key === 'width') {
+          f.width = Math.max(1, Math.min(f.start + 1, Math.round(v)));
+          input.value = f.width;
+          this.avoidAfter(idx);
+        } else f[key] = v;
+      }
+      this.render();
+      this.save();
+    }
+    avoidAfter(idx) {
+      const f = this.app.state.bitFields[idx];
+      const high = f.start | 0, low = high - Math.max(1, f.width | 0) + 1;
+      for (let j = idx + 1; j < this.app.state.bitFields.length; j++) {
+        const n = this.app.state.bitFields[j];
+        if (n.start <= high && n.start >= low) n.start = Math.max(0, high - f.width);
+      }
+    }
+    addRow() {
+      const bits = this.app.state.bitWordBits;
+      let low = bits;
+      for (const f of this.app.state.bitFields) low = Math.min(low, (f.start | 0) - (f.width | 0) + 1);
+      const width = Math.min(8, bits);
+      let start = low - 1;
+      if (start < 0) start = bits - 1;
+      this.app.state.bitFields.push({
+        name: 'F' + (this.app.state.bitFields.length + 1),
+        start: start, width: Math.max(1, Math.min(width, start + 1)),
+        signed: true, scale: 1, offset: 0, full: 0,
+        unit: this.app.state.bitUnit || 'FS', normalize: true, msbFirst: true
+      });
+      this.selected = this.app.state.bitFields.length - 1;
+      this.render(); this.save();
+    }
+    removeRow() {
+      if (this.app.state.bitFields.length <= 1) return;
+      this.app.state.bitFields.splice(Math.max(0, this.selected), 1);
+      this.selected = Math.max(0, this.selected - 1);
+      this.render(); this.save();
+    }
+    clampFields() {
+      const bits = this.app.state.bitWordBits;
+      this.app.state.bitFields.forEach(f => {
+        const range = normalizeFieldRange(f, bits);
+        f.start = range.start;
+        f.width = range.width;
+      });
+      this.render();
+    }
+    read() {
+      this.error.textContent = '';
+      const bits = this.app.state.bitWordBits;
+      for (let i = 0; i < this.app.state.bitFields.length; i++) {
+        const f = this.app.state.bitFields[i];
+        if (!f.name) f.name = 'F' + (i + 1);
+        if (f.start < 0 || f.start >= bits) { this.error.textContent = '第 ' + (i + 1) + ' 个字段起始位越界'; return null; }
+        const range = normalizeFieldRange(f, bits);
+        f.start = range.start;
+        f.width = range.width;
+      }
+      return this.app.state.bitFields.map(f => Object.assign({}, f));
+    }
+    save() {
+      this.app.saveSettings();
+      this.diagram.draw();
+    }
+    setFields(fields, bits) {
+      if (Array.isArray(fields) && fields.length) this.app.state.bitFields = fields.map(f => Object.assign({}, f));
+      if (bits) this.app.state.bitWordBits = bits;
+      this.syncControls();
+      this.render();
+    }
+  }
+
+  function normalizeFieldRange(field, wordBits) {
+    const bits = Math.max(1, Math.trunc(wordBits) || 32);
+    const start = Math.max(0, Math.min(bits - 1, Math.trunc(field.start) || 0));
+    const requested = Math.max(1, Math.trunc(field.width) || 1);
+    const width = Math.min(requested, start + 1, bits);
+    return { start: start, width: width, end: start - width + 1, requested: requested, clamped: width !== requested };
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+  function fmt(v) { return isFinite(v) ? String(v) : '0'; }
+
+  B.normalizeFieldRange = normalizeFieldRange;
+  B.BitFieldEditor = BitFieldEditor;
+  B.BitFieldDiagram = BitFieldDiagram;
+  global.NSCLDBitfield = B;
+})(window);
+
+</script>
+  <script>
+(function () {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const SETTINGS_KEY = 'nscld.workbench.v2';
+  const FILTER_NAMES = { A: 'A-weight', BS468: 'ITU-R BS.468-4', lowpass: '低通', highpass: '高通', bandpass: '带通', notch: '带阻' };
+  const GENERIC_FILTERS = { lowpass: true, highpass: true, bandpass: true, notch: true };
+  const saved = readStore();
+
+  const state = {
+    theme: saved.theme || 'dark',
+    spectrumLayout: saved.spectrumLayout || 'stacked',
+    waveOverlay: saved.waveOverlay === true,
+    logX: saved.logX !== false,
+    loop: saved.loop || 'off',
+    speed: Number(saved.speed) || 1,
+    fftSize: Number(saved.fftSize) || 0,
+    window: saved.window || 'Hann',
+    averaging: saved.averaging !== false,
+    weighting: saved.weighting || 'none',
+    bandwidth: Number(saved.bandwidth) || 0,
+    filterKind: saved.filterKind || 'none',
+    filterCutoff: Number(saved.filterCutoff) || 1000,
+    filterOrder: Number(saved.filterOrder) || 2,
+    bitWordBits: Number(saved.bitWordBits) || 32,
+    bitUnit: saved.bitUnit || 'FS',
+    bitFields: Array.isArray(saved.bitFields) ? saved.bitFields : null,
+    bitDiagramVisible: saved.bitDiagramVisible !== false,
+    signal: null,
+    baseSignal: null,
+    channel: 0,
+    channelCount: 0,
+    waveX0: 0,
+    waveX1: 1,
+    specX0: 20,
+    specX1: 24000,
+    specY1: 10,
+    specStacked: saved.spectrumLayout !== 'overlay',
+    cursorA: null,
+    cursorB: null,
+    selection: null,
+    fixedY: null,
+    weighted: null,
+    weightedLabel: '',
+    specs: [],
+    spec: null,
+    times: [],
+    jitters: [],
+    jitter: null,
+    playhead: null,
+    bitSourceChannel: 0,
+    bitSplit: false,
+    lastHover: ''
+  };
+
+  const app = { state: state };
+  window.NSCLDApp = app;
+
+  let wavePlot, spectrumPlot, jitterPlot, editor;
+  let analysisRun = 0, analyzeTimer = null, saveTimer = null;
+  const audio = { ctx: null, source: null, started: 0, offset: 0, len: 0, speed: 1, loop: false, raf: 0 };
+  let axisLane = 0;
+
+  function readStore() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}'); }
+    catch (e) { return {}; }
+  }
+
+  function setStatus(text) {
+    $('statusInfo').textContent = text;
+  }
+
+  function errorStatus(text) {
+    $('statusInfo').textContent = text;
+    $('statusInfo').style.color = 'var(--danger)';
+    clearTimeout(errorStatus.timer);
+    errorStatus.timer = setTimeout(() => { $('statusInfo').style.color = ''; }, 5000);
+  }
+
+  function tick() {
+    return new Promise(resolve => setTimeout(resolve, 16));
+  }
+
+  function filterObject(fs) {
+    return {
+      kind: state.filterKind,
+      cutoff: state.filterCutoff,
+      center: state.filterCutoff,
+      bandwidth: Math.max(20, state.filterCutoff * 0.5),
+      order: state.filterOrder,
+      q: 1,
+      fs: fs
+    };
+  }
+
+  function spectrumOptions() {
+    const fs = state.signal ? state.signal.sampleRate : 48000;
+    return {
+      fftSize: state.fftSize,
+      window: state.window,
+      averaging: state.averaging,
+      bandwidth: state.bandwidth,
+      weighting: state.weighting,
+      filter: filterObject(fs),
+      fs: fs,
+      notchPercent: 3
+    };
+  }
+
+  function analysisRange() {
+    const sig = state.signal;
+    if (!sig) return { start: 0, count: 0 };
+    if (state.selection && state.selection.count >= 32) {
+      return {
+        start: clamp(state.selection.start | 0, 0, sig.length),
+        count: clamp(state.selection.count | 0, 1, sig.length - state.selection.start | 0)
+      };
+    }
+    return { start: 0, count: sig.length };
+  }
+
+  async function analyzeAll() {
+    const sig = state.signal;
+    if (!sig) return;
+    const run = ++analysisRun;
+    const range = analysisRange();
+    setStatus('计算时域统计与抖动…');
+    await tick();
+    if (run !== analysisRun) return;
+    const fs = sig.sampleRate;
+    const filter = filterObject(fs);
+    const filterActive = filter.kind && filter.kind !== 'none';
+    state.weighted = null;
+    state.weightedLabel = '';
+    if (filterActive) {
+      setStatus('应用时域滤波…');
+      await tick();
+      const out = DSP.applyWeighting(sig.channels[state.channel], fs, { weighting: 'none', filter: filter, fs: fs });
+      if (out) { state.weighted = out.samples; state.weightedLabel = out.label; }
+      if (run !== analysisRun) return;
+    }
+    const times = [], jitters = [];
+    for (let c = 0; c < sig.channelCount; c++) {
+      const data = c === state.channel && state.weighted ? state.weighted : sig.channels[c];
+      times[c] = DSP.timeStats(data, range.start, range.count);
+      jitters[c] = DSP.jitter(data, range.start, range.count, fs);
+    }
+    const opts = spectrumOptions();
+    const specs = [];
+    for (let c = 0; c < sig.channelCount; c++) {
+      setStatus('计算 FFT 通道 ' + (c + 1) + '/' + sig.channelCount + '…');
+      await tick();
+      if (run !== analysisRun) return;
+      specs[c] = DSP.spectrum(sig.channels[c], range.start, range.count, fs, opts);
+    }
+    if (run !== analysisRun) return;
+    state.times = times;
+    state.jitters = jitters;
+    state.specs = specs;
+    state.spec = specs[state.channel] || specs[0];
+    state.jitter = jitters[state.channel];
+    if (state.spec && state.spec.valid) {
+      state.specX0 = 20;
+      state.specX1 = Math.max(100, fs / 2);
+      state.specY1 = Math.max(0, Math.ceil((state.spec.fundamentalDb + 10) / 10) * 10);
+    }
+    updateMeasurements();
+    updateSpectrumMeta();
+    renderPlots();
+    updateEmpty();
+    setStatus(sig.name + ' · 分析完成 · ' + (state.spec && state.spec.valid ? state.spec.fundamentalHz.toFixed(2) + ' Hz' : '无有效谱峰'));
+  }
+
+  function scheduleAnalyze(delay) {
+    clearTimeout(analyzeTimer);
+    analyzeTimer = setTimeout(() => analyzeAll(), delay == null ? 220 : delay);
+  }
+
+  function updateMeasurements() {
+    const sig = state.signal;
+    if (!sig) {
+      clearCards();
+      return;
+    }
+    const c = state.channel;
+    const range = analysisRange();
+    const data = state.weighted && c === state.channel ? state.weighted : sig.channels[c];
+    const stats = state.times[c] || DSP.timeStats(data, range.start, range.count);
+    if (stats) state.times[c] = stats;
+    const spec = state.specs[c] || state.spec;
+    const jit = state.jitters[c] || state.jitter;
+    $('activeChannel').textContent = sig.channelNames[c] || ('CH' + (c + 1));
+    const unit = sig.channelUnits[c] || 'FS';
+    if (stats) {
+      if (unit === 'V') {
+        $('rmsValue').textContent = stats.rms.toFixed(5);
+        $('rmsUnit').textContent = 'Vrms';
+        $('rmsSub').textContent = 'AC ' + stats.acRms.toFixed(5) + ' V · DC ' + stats.dc.toFixed(5) + ' V';
+        $('peakValue').textContent = stats.peakAbs.toFixed(5);
+        $('peakUnit').textContent = 'Vpk';
+        $('peakSub').textContent = 'P-P ' + stats.peakToPeak.toFixed(5) + ' V · 峰均 ' + stats.crestFactorDb.toFixed(2) + ' dB';
+        const load = Number($('toolLoad').value) || 8;
+        const p = stats.rms * stats.rms / load;
+        $('powerValue').textContent = p.toFixed(5);
+        $('powerUnit').textContent = 'W';
+        $('powerSub').textContent = (10 * Math.log10(Math.max(1e-30, p / 0.001))).toFixed(2) + ' dBm · ' + load + ' Ω';
+      } else {
+        $('rmsValue').textContent = stats.rmsDbFs.toFixed(2);
+        $('rmsUnit').textContent = 'dBFS';
+        $('rmsSub').textContent = 'AC ' + stats.acRmsDbFs.toFixed(2) + ' dBFS · DC ' + stats.dc.toFixed(4);
+        $('peakValue').textContent = stats.peakDbFs.toFixed(2);
+        $('peakUnit').textContent = 'dBFS';
+        $('peakSub').textContent = 'P-P ' + stats.peakToPeak.toFixed(4) + ' FS · 峰均 ' + stats.crestFactorDb.toFixed(2) + ' dB';
+        $('powerValue').textContent = fmtNum(stats.rms * stats.rms);
+        $('powerUnit').textContent = 'FS²';
+        $('powerSub').textContent = 'RMS 平方值 · 归一化';
+      }
+    }
+    if (spec && spec.valid) {
+      $('thdValue').textContent = spec.thdPlusNDb.toFixed(2);
+      $('thdSub').textContent = 'THD ' + spec.thdPct.toFixed(3) + '% · SINAD ' + spec.sinadDb.toFixed(1) + ' dB';
+      $('snrValue').textContent = spec.snrDb.toFixed(2);
+      $('snrSub').textContent = 'ENOB ' + spec.enob.toFixed(2) + ' bit · 噪底 ' + spec.noiseFloorDb.toFixed(1) + ' dB';
+      $('freqValue').textContent = spec.fundamentalHz >= 1000 ? (spec.fundamentalHz / 1000).toFixed(4) : spec.fundamentalHz.toFixed(2);
+      $('freqUnit').textContent = spec.fundamentalHz >= 1000 ? 'kHz' : 'Hz';
+      $('freqSub').textContent = spec.window + ' · ' + spec.fftSize + ' pts · Δf ' + spec.binHz.toFixed(3) + ' Hz';
+    } else {
+      $('thdValue').textContent = '—'; $('snrValue').textContent = '—'; $('freqValue').textContent = '—';
+      $('thdSub').textContent = spec && spec.message ? spec.message : '等待频谱';
+      $('snrSub').textContent = '等待频谱';
+      $('freqSub').textContent = 'FFT 谱峰';
+    }
+    if (jit && jit.valid) {
+      $('jitterValue').textContent = (jit.rmsPeriod * 1e12).toFixed(2);
+      $('jitterSub').textContent = 'P-P ' + (jit.ppPeriod * 1e12).toFixed(2) + ' ps · ' + jit.f0.toFixed(2) + ' Hz';
+      $('jitterHead').textContent = 'f0 ' + jit.f0.toFixed(3) + ' Hz · RMS ' + (jit.rmsPeriod * 1e12).toFixed(2)
+        + ' ps · P-P ' + (jit.ppPeriod * 1e12).toFixed(2) + ' ps · ' + jit.periods.length + ' 个周期';
+    } else {
+      $('jitterValue').textContent = '—';
+      $('jitterSub').textContent = jit && jit.message ? jit.message : '等待抖动分析';
+      $('jitterHead').textContent = jit && jit.message ? jit.message : '抖动分析尚未运行';
+    }
+    updateFilterInfo();
+    updateSummary();
+    $('analysisFoot').textContent = state.selection
+      ? '选区：' + NSCLDPlots.timeText(range.start / sig.sampleRate) + ' → ' + NSCLDPlots.timeText((range.start + range.count) / sig.sampleRate)
+      : '分析区域：全记录';
+    $('selectionInfo').textContent = state.selection ? '选区 ' + range.count.toLocaleString() + ' samples' : '全记录';
+  }
+
+  function updateFilterInfo() {
+    const active = state.filterKind && state.filterKind !== 'none';
+    if (!active) {
+      $('filterInfo').textContent = '时域滤波: 关';
+      $('filterInfo').style.color = '';
+      return;
+    }
+    const generic = GENERIC_FILTERS[state.filterKind];
+    $('filterInfo').textContent = '时域滤波: ' + FILTER_NAMES[state.filterKind]
+      + (generic ? ' · ' + state.filterCutoff + ' Hz · ' + state.filterOrder + ' 阶' : '')
+      + (state.weighted ? ' · 已应用' : '');
+    $('filterInfo').style.color = 'var(--amber)';
+  }
+
+  function updateSummary() {
+    const sig = state.signal;
+    const card = $('cardSummary');
+    if (!sig || sig.channelCount < 2) { card.hidden = true; return; }
+    card.hidden = false;
+    let html = '<div class="summary-row head"><span>通道</span><span>RMS</span><span>峰值</span><span>基波</span><span>抖动</span></div>';
+    const unit = sig.channelUnits[0] || 'FS';
+    for (let c = 0; c < sig.channelCount; c++) {
+      const t = state.times[c], sp = state.specs[c], j = state.jitters[c];
+      html += '<div class="summary-row"><span style="color:' + NSCLDPlots.channelColors[c % NSCLDPlots.channelColors.length] + '">' + esc(sig.channelNames[c]) + '</span>'
+        + '<span>' + (t ? (unit === 'V' ? t.rms.toFixed(3) + 'V' : t.rmsDbFs.toFixed(1)) : '—') + '</span>'
+        + '<span>' + (t ? (unit === 'V' ? t.peakAbs.toFixed(3) + 'V' : t.peakDbFs.toFixed(1)) : '—') + '</span>'
+        + '<span>' + (sp && sp.valid ? NSCLDPlots.fmtTick(sp.fundamentalHz) : '—') + '</span>'
+        + '<span>' + (j && j.valid ? (j.rmsPeriod * 1e12).toFixed(0) + 'ps' : '—') + '</span></div>';
+    }
+    $('summaryRows').innerHTML = html;
+  }
+
+  function clearCards() {
+    ['rmsValue', 'peakValue', 'powerValue', 'thdValue', 'snrValue', 'freqValue', 'jitterValue'].forEach(id => $(id).textContent = '—');
+    $('rmsUnit').textContent = 'dBFS'; $('peakUnit').textContent = 'dBFS'; $('powerUnit').textContent = '';
+    $('rmsSub').textContent = '等待信号'; $('peakSub').textContent = '等待信号'; $('powerSub').textContent = '伏特单位信号可计算';
+    $('thdSub').textContent = '等待频谱'; $('snrSub').textContent = '等待频谱'; $('freqSub').textContent = 'FFT 谱峰'; $('jitterSub').textContent = '等待抖动分析';
+    $('cardSummary').hidden = true;
+  }
+
+  function updateSpectrumMeta() {
+    const sp = state.spec;
+    if (!sp || !sp.valid) { $('spectrumMeta').textContent = sp && sp.message ? sp.message : '尚未分析'; return; }
+    $('spectrumMeta').textContent = 'F0 ' + sp.fundamentalHz.toFixed(3) + ' Hz · THD+N ' + sp.thdPlusNDb.toFixed(2)
+      + ' dB · SNR ' + sp.snrDb.toFixed(2) + ' dB · ' + sp.segments + ' 段' + (sp.weighting ? ' · ' + sp.weighting + ' 加权' : '');
+  }
+
+  function updateEmpty() {
+    $('waveEmpty').classList.toggle('hidden', !!state.signal);
+    $('spectrumEmpty').classList.toggle('hidden', !!(state.specs && state.specs.length));
+    $('jitterEmpty').classList.toggle('hidden', !!(state.jitter && state.jitter.valid));
+  }
+
+  function renderPlots() {
+    wavePlot && wavePlot.draw();
+    spectrumPlot && spectrumPlot.draw();
+    jitterPlot && jitterPlot.draw();
+  }
+
+  function updateFileMeta(name, detail) {
+    const meta = document.querySelector('#fileMeta .meta-name');
+    if (meta) { meta.textContent = name; meta.title = detail || name; }
+  }
+
+  function setSignal(sig, fileName) {
+    if (!sig || !sig.channels.length) return;
+    stopPlayback();
+    sig.name = fileName || sig.name || 'Signal';
+    state.signal = sig;
+    state.baseSignal = sig;
+    state.channel = 0;
+    state.channelCount = sig.channelCount;
+    state.weighted = null;
+    state.weightedLabel = '';
+    state.specs = [];
+    state.spec = null;
+    state.times = [];
+    state.jitters = [];
+    state.jitter = null;
+    state.cursorA = null;
+    state.cursorB = null;
+    state.selection = null;
+    state.fixedY = null;
+    state.playhead = null;
+    state.waveX0 = 0;
+    state.waveX1 = Math.max(1e-6, sig.duration);
+    state.specX0 = 20;
+    state.specX1 = Math.max(100, sig.sampleRate / 2);
+    state.specY1 = 10;
+    state.bitSplit = false;
+    state.bitSourceChannel = 0;
+    state.bitWordBits = clamp(sig.rawBits || sig.bits || 32, 4, 32);
+    state.bitUnit = sig.unit === 'V' ? 'V' : 'FS';
+    updateChannelSelect();
+    $('sourceSelect').value = 'raw';
+    updateFileMeta(sig.name, sig.format + ' · ' + sig.sampleRate + ' Hz');
+    $('channelSelect').value = String(0);
+    if (editor) {
+      editor.syncControls();
+      editor.clampFields();
+      editor.render();
+    }
+    $('bitMeta').textContent = state.bitWordBits + '-bit · ' + (state.bitFields ? state.bitFields.length : 0) + ' 字段';
+    updateEmpty();
+    clearCards();
+    setStatus('已载入 ' + sig.name + ' · ' + sig.format + ' · ' + sig.sampleRate + ' Hz · ' + sig.channelCount + ' 通道');
+    analyzeAll();
+  }
+
+  function updateChannelSelect() {
+    const sel = $('channelSelect');
+    const sig = state.signal;
+    sel.innerHTML = '';
+    if (!sig) { sel.innerHTML = '<option>CH1</option>'; return; }
+    for (let c = 0; c < sig.channelCount; c++) {
+      const o = document.createElement('option');
+      o.value = String(c);
+      o.textContent = sig.channelNames[c] || ('CH' + (c + 1));
+      sel.appendChild(o);
+    }
+    sel.value = String(state.channel);
+  }
+
+  async function handleFile(file) {
+    if (!file) return;
+    const ext = file.name.split('.').pop().toLowerCase();
+    setStatus('读取 ' + file.name + '…');
+    try {
+      if (ext === 'bin' || ext === 'dat' || ext === 'raw' || ext === 'pdm') {
+        await loadDigitalFile(file);
+        return;
+      }
+      if (ext === 'csv' || ext === 'txt') {
+        const text = await file.text();
+        const sig = NSCLDFormats.parseCsv(text, file.name);
+        setSignal(sig, file.name);
+        return;
+      }
+      const buffer = await file.arrayBuffer();
+      if (ext === 'flac') {
+        setStatus('解码 FLAC…');
+        const sig = await NSCLDFormats.parseFlac(buffer, file.name);
+        setSignal(sig, file.name);
+        return;
+      }
+      if (ext === 'wav') {
+        const sig = NSCLDFormats.parseWav(buffer);
+        setSignal(sig, file.name);
+        return;
+      }
+      const head = new Uint8Array(buffer, 0, Math.min(4, buffer.byteLength));
+      if (String.fromCharCode.apply(null, head) === 'fLaC') {
+        const sig = await NSCLDFormats.parseFlac(buffer, file.name);
+        setSignal(sig, file.name);
+      } else if (head.length >= 4 && (head[0] === 82 || head[0] === 70)) {
+        const sig = NSCLDFormats.parseWav(buffer);
+        setSignal(sig, file.name);
+      } else {
+        throw new Error('无法识别的文件。请选择 WAV、FLAC、CSV 或使用数字流导入。');
+      }
+    } catch (err) {
+      console.error(err);
+      errorStatus('导入失败: ' + (err && err.message ? err.message : err));
+      $('dropZone').title = err && err.message ? err.message : String(err);
+    }
+  }
+
+  async function loadDigitalFile(file) {
+    if (!file) return;
+    try {
+      if (/\.csv$/i.test(file.name)) {
+        const sig = NSCLDFormats.parseCsv(await file.text(), file.name);
+        setSignal(sig, file.name);
+        return;
+      }
+      const cfg = readDigitalConfig();
+      const buffer = await file.arrayBuffer();
+      const sig = NSCLDFormats.decodeRawDigital(buffer, cfg, file.name);
+      setSignal(sig, file.name);
+    } catch (err) {
+      errorStatus('数字流导入失败: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  function readDigitalConfig() {
+    return {
+      mode: $('digitalMode').value,
+      sampleRate: Number($('digitalRate').value) || 48000,
+      wordBits: Number($('digitalBits').value) || 16,
+      slots: Number($('digitalSlots').value) || 2,
+      slotWidth: Number($('digitalSlotWidth').value) || 16,
+      offset: Number($('digitalOffset').value) || 0,
+      alignment: $('digitalAlign').value,
+      lsbFirst: $('digitalOrder').value === 'lsb',
+      signed: $('digitalSigned').value === 'signed',
+      decim: Number($('digitalDecim').value) || 64
+    };
+  }
+
+  function loadDemo() {
+    const sig = NSCLDFormats.demoSignal();
+    setSignal(sig, 'NSCLD demo · 3-channel test tone');
+  }
+
+  function stopPlayback() {
+    cancelAnimationFrame(audio.raf);
+    audio.raf = 0;
+    if (audio.source) {
+      try { audio.source.onended = null; audio.source.stop(); } catch (e) {}
+      audio.source = null;
+    }
+    audio.started = 0;
+    $('playBtn').textContent = '▶ 播放';
+    $('playBtn').classList.add('accent');
+  }
+
+  async function play() {
+    if (!state.signal) { errorStatus('请先载入信号'); return; }
+    if (audio.source) { stopPlayback(); state.playhead = null; wavePlot.draw(); return; }
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!audio.ctx) audio.ctx = new Ctx();
+      if (audio.ctx.state === 'suspended') await audio.ctx.resume();
+      let data = state.signal.channels[state.channel];
+      if ($('sourceSelect').value === 'filtered' && state.filterKind !== 'none') {
+        if (!state.weighted) {
+          setStatus('生成滤波播放源…');
+          await tick();
+          const out = DSP.applyWeighting(state.signal.channels[state.channel], state.signal.sampleRate, { weighting: 'none', filter: filterObject(state.signal.sampleRate), fs: state.signal.sampleRate });
+          if (out) { state.weighted = out.samples; state.weightedLabel = out.label; }
+        }
+        if (state.weighted) data = state.weighted;
+      }
+      let start = state.selection ? Math.max(0, state.selection.start) : (state.cursorA != null ? Math.round(state.cursorA * state.signal.sampleRate) : 0);
+      start = clamp(start, 0, Math.max(0, state.signal.length - 1));
+      let end = state.selection ? Math.min(state.signal.length, state.selection.start + state.selection.count) : state.signal.length;
+      if (end - start < 8) end = state.signal.length;
+      const buf = audio.ctx.createBuffer(1, end - start, state.signal.sampleRate);
+      buf.copyToChannel(data.subarray(start, end), 0);
+      const src = audio.ctx.createBufferSource();
+      src.buffer = buf;
+      src.playbackRate.value = Number($('speedSelect').value) || 1;
+      src.loop = state.loop === 'continuous';
+      src.connect(audio.ctx.destination);
+      audio.source = src;
+      audio.started = audio.ctx.currentTime;
+      audio.offset = start / state.signal.sampleRate;
+      audio.len = buf.duration;
+      audio.speed = src.playbackRate.value;
+      audio.loop = state.loop === 'continuous';
+      audio.lastDraw = 0;
+      src.onended = () => {
+        if (audio.source === src) {
+          audio.source = null;
+          state.playhead = null;
+          $('playBtn').textContent = '▶ 播放';
+          $('playBtn').classList.add('accent');
+          wavePlot.draw();
+          setStatus('播放结束');
+        }
+      };
+      src.start(0);
+      $('playBtn').textContent = '❚❚ 停止';
+      $('playBtn').classList.remove('accent');
+      setStatus('播放中 · ' + (state.weighted && $('sourceSelect').value === 'filtered' ? '滤波信号' : '原始信号'));
+      const animate = () => {
+        if (!audio.source || !audio.ctx) return;
+        let elapsed = (audio.ctx.currentTime - audio.started) * audio.speed;
+        if (audio.loop) elapsed %= Math.max(1e-9, audio.len);
+        state.playhead = audio.offset + elapsed;
+        if (state.playhead > state.signal.duration) state.playhead = state.signal.duration;
+        const now = performance.now();
+        if (!audio.lastDraw || now - audio.lastDraw >= 32) {
+          audio.lastDraw = now;
+          wavePlot.draw();
+        }
+        if (!audio.loop && elapsed >= audio.len) {
+          state.playhead = null;
+          return;
+        }
+        audio.raf = requestAnimationFrame(animate);
+      };
+      animate();
+    } catch (err) {
+      console.error(err);
+      errorStatus('无法播放: ' + (err && err.message ? err.message : err));
+    }
+  }
+
+  function applySelection() {
+    const sig = state.signal;
+    if (!sig) return;
+    if (state.selection) {
+      state.selection.start = clamp(state.selection.start | 0, 0, sig.length - 1);
+      state.selection.count = clamp(state.selection.count | 0, 1, sig.length - state.selection.start);
+    }
+    updateSelectionInfo();
+    scheduleAnalyze(180);
+  }
+
+  function updateSelectionInfo() {
+    const sig = state.signal;
+    if (!sig) { $('selectionInfo').textContent = '全记录'; return; }
+    if (state.selection) {
+      $('selectionInfo').textContent = '选区 ' + state.selection.count.toLocaleString() + ' samples';
+    } else {
+      $('selectionInfo').textContent = '全记录';
+    }
+  }
+
+  function resetWaveView() {
+    if (!state.signal) return;
+    state.waveX0 = 0;
+    state.waveX1 = state.signal.duration;
+    state.fixedY = null;
+    updateSelectionInfo();
+    wavePlot.draw();
+  }
+
+  function resetSpectrumView() {
+    if (!state.signal) return;
+    state.specX0 = state.logX ? 20 : 0;
+    state.specX1 = state.signal.sampleRate / 2;
+    state.specY1 = state.spec && state.spec.valid ? Math.ceil((state.spec.fundamentalDb + 10) / 10) * 10 : 10;
+    spectrumPlot.draw();
+  }
+
+  function setCursorLabel(name, which) {
+    const t = name === 'A' ? state.cursorA : state.cursorB;
+    if (t != null) setStatus('游标 ' + name + ' = ' + NSCLDPlots.timeText(t));
+  }
+
+  function statusHover(text) {
+    state.lastHover = text;
+    $('statusHover').textContent = text;
+  }
+
+  function showMenu(x, y, items) {
+    const menu = $('contextMenu');
+    menu.innerHTML = '';
+    items.forEach(item => {
+      if (item.note) {
+        const d = document.createElement('div');
+        d.className = 'menu-note'; d.textContent = item.note; menu.appendChild(d);
+      } else {
+        const b = document.createElement('button');
+        b.textContent = item.label;
+        b.onclick = () => { menu.classList.add('hidden'); item.action(); };
+        menu.appendChild(b);
+      }
+    });
+    menu.style.left = Math.min(x, innerWidth - 220) + 'px';
+    menu.style.top = Math.min(y, innerHeight - 200) + 'px';
+    menu.classList.remove('hidden');
+  }
+
+  function hideMenu() { $('contextMenu').classList.add('hidden'); }
+
+  function showWaveMenu(x, y, lane) {
+    const sig = state.signal; if (!sig) return;
+    const rect = wavePlot.canvas.getBoundingClientRect();
+    const t = wavePlot.timeAt(x - rect.left);
+    const lname = sig.channelNames[lane] || ('CH' + (lane + 1));
+    showMenu(x, y, [
+      { note: lname + ' · ' + NSCLDPlots.timeText(t) },
+      { label: '固定 ' + (state.waveOverlay ? '叠放视图' : lname) + ' 的 Y 范围…', action: () => openAxis(lane) },
+      { label: '恢复 ' + (state.waveOverlay ? '叠放视图' : lname) + ' 自动 Y', action: () => { if (state.fixedY) delete state.fixedY[state.waveOverlay ? 'overlay' : lane]; wavePlot.draw(); } },
+      { label: '把游标 A 放在这里', action: () => { state.cursorA = t; setCursorLabel('A'); wavePlot.draw(); } },
+      { label: '把游标 B 放在这里', action: () => { state.cursorB = t; setCursorLabel('B'); wavePlot.draw(); } },
+      { label: '设为选区起点，终点用游标 B', action: () => { if (state.cursorB == null) state.cursorB = sig.duration; state.selection = { start: Math.round(Math.min(t, state.cursorB) * sig.sampleRate), count: Math.max(1, Math.round(Math.abs(state.cursorB - t) * sig.sampleRate)) }; applySelection(); } },
+      { label: '全图 / 自动 Y', action: resetWaveView }
+    ]);
+  }
+
+  function showSpectrumMenu(x, y) {
+    showMenu(x, y, [
+      { note: state.logX ? '当前：对数频率轴' : '当前：线性频率轴' },
+      { label: '切换线性频率轴', action: () => { state.logX = false; setAxisButtons(); spectrumPlot.draw(); saveSettings(); } },
+      { label: '切换对数频率轴', action: () => { state.logX = true; setAxisButtons(); spectrumPlot.draw(); saveSettings(); } },
+      { label: '重置频谱视图', action: resetSpectrumView }
+    ]);
+  }
+
+  function openAxis(lane) {
+    axisLane = lane;
+    const sig = state.signal; if (!sig) return;
+    const range = wavePlot.rangeFor(lane);
+    axisLane = state.waveOverlay ? 'overlay' : lane;
+    $('axisTitle').textContent = '固定 ' + (state.waveOverlay ? '叠放视图' : (sig.channelNames[lane] || ('CH' + (lane + 1)))) + ' 的 Y 范围';
+    $('axisMin').value = range[0];
+    $('axisMax').value = range[1];
+    $('axisModal').classList.remove('hidden');
+  }
+
+  function saveSettings() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => {
+      const payload = {
+        version: 2,
+        theme: state.theme,
+        spectrumLayout: state.spectrumLayout,
+        waveOverlay: state.waveOverlay,
+        logX: state.logX,
+        loop: state.loop,
+        speed: state.speed,
+        fftSize: state.fftSize,
+        window: state.window,
+        averaging: state.averaging,
+        weighting: state.weighting,
+        bandwidth: state.bandwidth,
+        filterKind: state.filterKind,
+        filterCutoff: state.filterCutoff,
+        filterOrder: state.filterOrder,
+        bitWordBits: state.bitWordBits,
+        bitUnit: state.bitUnit,
+        bitFields: state.bitFields,
+        bitDiagramVisible: state.bitDiagramVisible
+      };
+      try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(payload)); } catch (e) {}
+    }, 90);
+  }
+
+  function applyTheme(theme) {
+    state.theme = theme === 'light' ? 'light' : 'dark';
+    document.body.dataset.theme = state.theme;
+    renderPlots();
+    if (editor) editor.diagram.draw();
+  }
+
+  function syncControls() {
+    applyTheme(state.theme);
+    $('speedSelect').value = String(state.speed);
+    $('loopSelect').value = state.loop;
+    $('windowSelect').value = state.window;
+    $('fftSelect').value = String(state.fftSize);
+    $('averageCheck').checked = state.averaging;
+    $('weightSelect').value = state.weighting;
+    $('filterKind').value = state.filterKind;
+    $('filterCutoff').value = state.filterCutoff;
+    $('filterOrder').value = String(state.filterOrder);
+    refreshFilterControls();
+    $('bandwidthInput').value = state.bandwidth;
+    $('specLayout').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.layout === state.spectrumLayout));
+    $('waveLayout').querySelectorAll('button').forEach(b => b.classList.toggle('active', (b.dataset.layout === 'overlay') === state.waveOverlay));
+    setAxisButtons();
+    $('settingTheme').value = state.theme;
+    $('settingLayout').value = state.spectrumLayout;
+    $('settingAxis').value = state.logX ? 'log' : 'linear';
+    $('settingLoop').value = state.loop;
+    $('settingSpeed').value = String(state.speed);
+    $('sourceSelect').value = 'raw';
+  }
+
+  function setAxisButtons() {
+    $('spectrumAxis').querySelectorAll('button').forEach(b => b.classList.toggle('active', (b.dataset.axis === 'log') === state.logX));
+  }
+
+  function refreshFilterControls() {
+    const generic = !!GENERIC_FILTERS[state.filterKind];
+    $('filterCutoff').disabled = !generic;
+    $('filterOrder').disabled = !generic;
+  }
+
+  function setView(name) {
+    document.querySelectorAll('.rail-item').forEach(b => b.classList.toggle('active', b.dataset.view === name));
+    document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + name));
+    requestAnimationFrame(() => {
+      wavePlot && wavePlot.resize();
+      spectrumPlot && spectrumPlot.resize();
+      jitterPlot && jitterPlot.resize();
+    });
+  }
+
+  function bind() {
+    document.querySelectorAll('.rail-item').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+    $('openBtn').addEventListener('click', () => $('fileInput').click());
+    $('dropBrowseBtn').addEventListener('click', () => $('fileInput').click());
+    $('demoBtn').addEventListener('click', loadDemo);
+    $('fileInput').addEventListener('change', e => { const f = e.target.files[0]; if (f) handleFile(f); e.target.value = ''; });
+    $('digitalBrowseBtn').addEventListener('click', () => $('digitalInput').click());
+    $('digitalInput').addEventListener('change', e => { const f = e.target.files[0]; if (f) loadDigitalFile(f); e.target.value = ''; });
+    $('digitalBtn').addEventListener('click', () => setView('import'));
+
+    const dz = $('dropZone');
+    ['dragenter', 'dragover'].forEach(k => dz.addEventListener(k, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+    ['dragleave', 'drop'].forEach(k => dz.addEventListener(k, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+    dz.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) handleFile(f); });
+    ['dragover', 'drop'].forEach(k => document.addEventListener(k, e => e.preventDefault()));
+
+    $('themeBtn').addEventListener('click', () => {
+      applyTheme(state.theme === 'dark' ? 'light' : 'dark');
+      $('settingTheme').value = state.theme;
+      saveSettings();
+    });
+
+    $('settingsBtn').addEventListener('click', () => {
+      $('settingTheme').value = state.theme;
+      $('settingLayout').value = state.spectrumLayout;
+      $('settingAxis').value = state.logX ? 'log' : 'linear';
+      $('settingLoop').value = state.loop;
+      $('settingSpeed').value = String(state.speed);
+      $('settingsModal').classList.remove('hidden');
+    });
+    $('saveSettingsBtn').addEventListener('click', () => {
+      applyTheme($('settingTheme').value);
+      state.spectrumLayout = $('settingLayout').value;
+      state.specStacked = state.spectrumLayout !== 'overlay';
+      state.logX = $('settingAxis').value === 'log';
+      state.loop = $('settingLoop').value;
+      state.speed = Number($('settingSpeed').value) || 1;
+      $('loopSelect').value = state.loop;
+      $('speedSelect').value = String(state.speed);
+      $('specLayout').querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.layout === state.spectrumLayout));
+      setAxisButtons();
+      saveSettings(); renderPlots(); $('settingsModal').classList.add('hidden');
+      setStatus('设置已保存到本机');
+    });
+    document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', () => { $(b.dataset.close).classList.add('hidden'); }));
+    document.querySelectorAll('.modal').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.add('hidden'); }));
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#contextMenu')) hideMenu();
+    });
+
+    $('playBtn').addEventListener('click', play);
+    $('stopBtn').addEventListener('click', () => { stopPlayback(); state.playhead = null; wavePlot.draw(); });
+    $('selectBtn').addEventListener('click', () => {
+      const sig = state.signal; if (!sig) return;
+      if (state.cursorA != null && state.cursorB != null) {
+        const a = Math.min(state.cursorA, state.cursorB), b = Math.max(state.cursorA, state.cursorB);
+        state.selection = { start: Math.round(a * sig.sampleRate), count: Math.max(1, Math.round((b - a) * sig.sampleRate)) };
+      } else {
+        state.selection = { start: Math.round(state.waveX0 * sig.sampleRate), count: Math.max(1, Math.round((state.waveX1 - state.waveX0) * sig.sampleRate)) };
+      }
+      applySelection();
+    });
+    $('resetViewBtn').addEventListener('click', resetWaveView);
+    $('speedSelect').addEventListener('change', () => {
+      state.speed = Number($('speedSelect').value) || 1;
+      audio.speed = state.speed;
+      if (audio.source) audio.source.playbackRate.value = state.speed;
+      saveSettings();
+    });
+    $('loopSelect').addEventListener('change', () => {
+      state.loop = $('loopSelect').value;
+      audio.loop = state.loop === 'continuous';
+      if (audio.source) audio.source.loop = audio.loop;
+      saveSettings();
+    });
+    $('channelSelect').addEventListener('change', () => {
+      state.channel = Number($('channelSelect').value) || 0;
+      state.selection = null;
+      state.weighted = null;
+      state.spec = state.specs[state.channel] || state.spec;
+      state.jitter = state.jitters[state.channel] || state.jitter;
+      analyzeAll();
+    });
+    $('sourceSelect').addEventListener('change', () => {});
+
+    $('waveLayout').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      state.waveOverlay = b.dataset.layout === 'overlay';
+      $('waveLayout').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+      wavePlot.draw(); saveSettings();
+    }));
+    $('specLayout').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      state.spectrumLayout = b.dataset.layout;
+      state.specStacked = state.spectrumLayout !== 'overlay';
+      $('specLayout').querySelectorAll('button').forEach(x => x.classList.toggle('active', x === b));
+      spectrumPlot.draw(); saveSettings();
+    }));
+    $('spectrumAxis').querySelectorAll('button').forEach(b => b.addEventListener('click', () => {
+      state.logX = b.dataset.axis === 'log';
+      setAxisButtons(); spectrumPlot.draw(); saveSettings();
+    }));
+    $('windowSelect').addEventListener('change', () => { state.window = $('windowSelect').value; saveSettings(); scheduleAnalyze(160); });
+    $('fftSelect').addEventListener('change', () => { state.fftSize = Number($('fftSelect').value) || 0; saveSettings(); scheduleAnalyze(160); });
+    $('averageCheck').addEventListener('change', () => { state.averaging = $('averageCheck').checked; saveSettings(); scheduleAnalyze(160); });
+    $('weightSelect').addEventListener('change', () => { state.weighting = $('weightSelect').value; saveSettings(); scheduleAnalyze(160); });
+    $('bandwidthInput').addEventListener('change', () => { state.bandwidth = Math.max(0, Number($('bandwidthInput').value) || 0); saveSettings(); scheduleAnalyze(160); });
+    $('filterKind').addEventListener('change', () => {
+      state.filterKind = $('filterKind').value;
+      refreshFilterControls();
+      updateFilterInfo();
+      saveSettings();
+    });
+    $('filterCutoff').addEventListener('input', () => { state.filterCutoff = Math.max(1, Number($('filterCutoff').value) || 1000); saveSettings(); });
+    $('filterOrder').addEventListener('change', () => { state.filterOrder = Number($('filterOrder').value) || 2; saveSettings(); });
+    $('reanalyzeBtn').addEventListener('click', () => { saveSettings(); analyzeAll(); });
+
+    $('jitterTrend').addEventListener('change', () => jitterPlot.draw());
+    $('axisApply').addEventListener('click', () => {
+      if (!state.signal) return;
+      const a = Number($('axisMin').value), b = Number($('axisMax').value);
+      if (isFinite(a) && isFinite(b) && b > a) {
+        if (!state.fixedY) state.fixedY = {};
+        state.fixedY[axisLane] = [a, b];
+        wavePlot.draw();
+      }
+      $('axisModal').classList.add('hidden');
+    });
+
+    $('bitToggleBtn').addEventListener('click', () => {
+      const panel = $('bitfieldPanel');
+      panel.classList.toggle('hidden');
+      $('bitToggleBtn').classList.toggle('primary', !panel.classList.contains('hidden'));
+      if (!panel.classList.contains('hidden')) { setView('wave'); setTimeout(() => editor.diagram.resize(), 80); }
+    });
+    $('exportWavBtn').addEventListener('click', exportWav);
+    $('exportReportBtn').addEventListener('click', exportReport);
+    $('exportSettingsBtn').addEventListener('click', () => downloadJson('nscld-settings.json', readSettingsPayload()));
+    $('importSettingsBtn').addEventListener('click', () => $('settingsFileInput').click());
+    $('settingsFileInput').addEventListener('change', async e => {
+      const f = e.target.files[0]; if (!f) return;
+      try {
+        const obj = JSON.parse(await f.text());
+        applySettingsPayload(obj);
+        $('settingsModal').classList.add('hidden');
+        setStatus('设置已导入');
+      } catch (err) { errorStatus('设置导入失败'); }
+      e.target.value = '';
+    });
+
+    bindTools();
+    document.addEventListener('keydown', e => {
+      if (e.target.matches('input, select, textarea')) return;
+      if (e.code === 'Space') { e.preventDefault(); play(); }
+      if (e.key === 'Escape') { hideMenu(); document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden')); }
+    });
+  }
+
+  function bindTools() {
+    const updateDb = () => {
+      const v = Number($('toolDb').value) || 0;
+      $('toolDbOut').textContent = Math.pow(10, v / 20).toFixed(6);
+    };
+    const updateRatio = () => {
+      const v = Math.max(1e-12, Number($('toolRatio').value) || 1);
+      $('toolRatioOut').textContent = (20 * Math.log10(v)).toFixed(2) + ' dB';
+    };
+    const updatePower = () => {
+      const v = Number($('toolVolt').value) || 0, r = Math.max(0.0001, Number($('toolLoad').value) || 8);
+      const p = v * v / r;
+      $('toolPowerOut').textContent = p.toFixed(5) + ' W · ' + (10 * Math.log10(Math.max(1e-30, p / 0.001))).toFixed(2) + ' dBm';
+      updateMeasurements();
+    };
+    const updateFft = () => {
+      const fs = Number($('toolFs').value) || 48000, n = Number($('toolN').value) || 32768;
+      $('toolFftOut').textContent = 'Δf = ' + (fs / n).toFixed(3) + ' Hz · 时长 ' + (n / fs * 1e3).toFixed(2) + ' ms';
+    };
+    $('toolDb').addEventListener('input', updateDb);
+    $('toolRatio').addEventListener('input', updateRatio);
+    $('toolVolt').addEventListener('input', updatePower);
+    $('toolLoad').addEventListener('input', updatePower);
+    $('toolFs').addEventListener('input', updateFft);
+    $('toolN').addEventListener('input', updateFft);
+    updateDb(); updateRatio(); updatePower(); updateFft();
+  }
+
+  function readSettingsPayload() {
+    return {
+      version: 2, theme: state.theme, spectrumLayout: state.spectrumLayout, waveOverlay: state.waveOverlay, logX: state.logX,
+      loop: state.loop, speed: state.speed, fftSize: state.fftSize, window: state.window,
+      averaging: state.averaging, weighting: state.weighting, bandwidth: state.bandwidth,
+      filterKind: state.filterKind, filterCutoff: state.filterCutoff, filterOrder: state.filterOrder,
+      bitWordBits: state.bitWordBits, bitUnit: state.bitUnit, bitFields: state.bitFields,
+      bitDiagramVisible: state.bitDiagramVisible
+    };
+  }
+
+  function applySettingsPayload(o) {
+    if (!o || typeof o !== 'object') throw new Error('无效设置');
+    if (o.theme) state.theme = o.theme;
+    if (o.spectrumLayout) { state.spectrumLayout = o.spectrumLayout; state.specStacked = o.spectrumLayout !== 'overlay'; }
+    if (o.waveOverlay != null) state.waveOverlay = !!o.waveOverlay;
+    if (o.logX != null) state.logX = !!o.logX;
+    if (o.loop) state.loop = o.loop;
+    if (o.speed) state.speed = Number(o.speed) || 1;
+    if (o.fftSize != null) state.fftSize = Number(o.fftSize) || 0;
+    if (o.window) state.window = o.window;
+    if (o.averaging != null) state.averaging = !!o.averaging;
+    if (o.weighting) state.weighting = o.weighting;
+    if (o.bandwidth != null) state.bandwidth = Number(o.bandwidth) || 0;
+    if (o.filterKind) state.filterKind = o.filterKind;
+    if (o.filterCutoff) state.filterCutoff = Number(o.filterCutoff) || 1000;
+    if (o.filterOrder) state.filterOrder = Number(o.filterOrder) || 2;
+    if (o.bitWordBits) state.bitWordBits = Number(o.bitWordBits) || 32;
+    if (o.bitUnit) state.bitUnit = o.bitUnit;
+    if (Array.isArray(o.bitFields)) state.bitFields = o.bitFields;
+    if (o.bitDiagramVisible != null) state.bitDiagramVisible = !!o.bitDiagramVisible;
+    syncControls();
+    if (editor) { editor.syncControls(); editor.clampFields(); editor.render(); }
+    saveSettings(); scheduleAnalyze(100);
+  }
+
+  function downloadJson(name, obj) {
+    downloadBlob(name, new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }));
+  }
+
+  function downloadBlob(name, blob) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1200);
+  }
+
+  function exportWav() {
+    const sig = state.signal;
+    if (!sig) { errorStatus('没有可导出的信号'); return; }
+    const data = state.weighted && state.channel === state.channel ? state.weighted : sig.channels[state.channel];
+    downloadBlob((sig.name || 'signal').replace(/\.[^.]+$/, '') + '-nscld.wav', NSCLDFormats.exportWav(data, sig.sampleRate));
+    setStatus('WAV 已导出');
+  }
+
+  function exportReport() {
+    const sig = state.signal;
+    if (!sig) { errorStatus('没有可导出的分析'); return; }
+    const t = state.times[state.channel], s = state.specs[state.channel], j = state.jitters[state.channel];
+    const lines = [
+      'NSCLD Audio Measurement Workbench',
+      'Generated: ' + new Date().toISOString(),
+      'Signal: ' + sig.name,
+      'Format: ' + sig.format,
+      'Sample rate: ' + sig.sampleRate + ' Hz',
+      'Channels: ' + sig.channelCount,
+      'Samples: ' + sig.length,
+      'Duration: ' + sig.duration.toFixed(6) + ' s',
+      'Analysis channel: ' + (sig.channelNames[state.channel] || ('CH' + (state.channel + 1))),
+      '',
+      'TIME DOMAIN',
+      t ? 'RMS: ' + t.rms.toFixed(8) + ' (' + t.rmsDbFs.toFixed(3) + ' dBFS)' : 'RMS: n/a',
+      t ? 'AC RMS: ' + t.acRms.toFixed(8) + ' (' + t.acRmsDbFs.toFixed(3) + ' dBFS)' : '',
+      t ? 'Peak: ' + t.peakAbs.toFixed(8) + ' (' + t.peakDbFs.toFixed(3) + ' dBFS)' : '',
+      t ? 'Peak-to-peak: ' + t.peakToPeak.toFixed(8) : '',
+      t ? 'DC: ' + t.dc.toFixed(8) + '  Crest factor: ' + t.crestFactorDb.toFixed(3) + ' dB' : '',
+      '',
+      'SPECTRUM',
+      s && s.valid ? 'Window: ' + s.window + '  FFT: ' + s.fftSize + '  Segments: ' + s.segments : 'Spectrum: n/a',
+      s && s.valid ? 'Fundamental: ' + s.fundamentalHz.toFixed(6) + ' Hz  ' + s.fundamentalDb.toFixed(3) + ' dB' : '',
+      s && s.valid ? 'THD+N: ' + s.thdPlusNDb.toFixed(3) + ' dB (' + s.thdPlusPct.toFixed(5) + ' %)' : '',
+      s && s.valid ? 'THD: ' + s.thdDb.toFixed(3) + ' dB  SNR: ' + s.snrDb.toFixed(3) + ' dB  SINAD: ' + s.sinadDb.toFixed(3) + ' dB' : '',
+      s && s.valid ? 'ENOB: ' + s.enob.toFixed(3) + ' bit  Noise floor: ' + s.noiseFloorDb.toFixed(3) + ' dB' : '',
+      s && s.weighting ? 'Weighting: ' + s.weighting : '',
+      '',
+      'JITTER',
+      j && j.valid ? 'f0: ' + j.f0.toFixed(6) + ' Hz' : 'Jitter: n/a',
+      j && j.valid ? 'RMS period: ' + (j.rmsPeriod * 1e12).toFixed(3) + ' ps' : '',
+      j && j.valid ? 'P-P period: ' + (j.ppPeriod * 1e12).toFixed(3) + ' ps' : '',
+      j && j.valid ? 'RMS cycle-cycle: ' + (j.rmsCycle * 1e12).toFixed(3) + ' ps  ' + j.percent.toFixed(4) + '%' : '',
+      '',
+      'BIT FIELDS (' + state.bitWordBits + '-bit, start is actual bit index)',
+      ...(state.bitFields || []).map(f => f.name + ': start ' + f.start + ', width ' + f.width + ', ' + (f.signed ? 'signed' : 'unsigned') + ', ' + (f.msbFirst ? 'MSB First' : 'LSB First') + ', normalize=' + (f.normalize ? 'yes' : 'no')),
+      '',
+      'Filter: ' + (state.filterKind === 'none' ? 'off' : FILTER_NAMES[state.filterKind] + ' ' + state.filterCutoff + ' Hz'),
+      'Selection: ' + (state.selection ? (state.selection.start + ' + ' + state.selection.count) : 'full record')
+    ];
+    downloadBlob((sig.name || 'nscld').replace(/\.[^.]+$/, '') + '-report.txt', new Blob([lines.filter(Boolean).join('\r\n')], { type: 'text/plain;charset=utf-8' }));
+    setStatus('分析报告已导出');
+  }
+
+  function bitAt(word, index) { return (word >>> index) & 1; }
+
+  function reverseBits(v, width) {
+    let r = 0;
+    for (let i = 0; i < width; i++) { r = (r << 1) | (v & 1); v >>>= 1; }
+    return r >>> 0;
+  }
+
+  function decodeField(word, spec, wordBits) {
+    const range = NSCLDBitfield.normalizeFieldRange(spec, wordBits);
+    const start = range.start;
+    const width = range.width;
+    const low = range.end;
+    const mask = width >= 32 ? 0xffffffff : ((1 << width) - 1) >>> 0;
+    let code = (word >>> low) & mask;
+    if (!spec.msbFirst) code = reverseBits(code, width);
+    let signedCode = code;
+    if (spec.signed && width > 0 && (code & (1 << (width - 1)))) signedCode = code - Math.pow(2, width);
+    if (spec.normalize) {
+      let frac = spec.signed ? signedCode / Math.pow(2, width - 1) : code / (Math.pow(2, width) - 1);
+      if (Math.abs(spec.full) > 1e-15) {
+        const limit = Math.abs(spec.full);
+        frac *= spec.full;
+        frac = clamp(frac, -limit, limit);
+      }
+      return frac;
+    }
+    return signedCode * (isFinite(spec.scale) ? spec.scale : 1) + (isFinite(spec.offset) ? spec.offset : 0);
+  }
+
+  async function applyBitFields(fields) {
+    const base = state.baseSignal;
+    if (!base) { $('bitError').textContent = '请先载入信号'; return; }
+    if (!fields || !fields.length) { $('bitError').textContent = '至少需要一个字段'; return; }
+    const bits = state.bitWordBits;
+    const sourceChannel = state.bitSplit ? state.bitSourceChannel : state.channel;
+    const srcData = base.channels[sourceChannel];
+    const raw = base.rawWords && base.rawWords[sourceChannel] ? base.rawWords[sourceChannel] : null;
+    const rawBits = base.rawBits || 0;
+    const wordMask = bits >= 32 ? 0xffffffff : ((1 << bits) - 1) >>> 0;
+    const channels = [];
+    const units = [];
+    for (let fi = 0; fi < fields.length; fi++) {
+      const f = fields[fi];
+      const out = new Float32Array(base.length);
+      for (let i = 0; i < base.length; i++) {
+        let word;
+        if (raw && rawBits) word = raw[i] >>> 0;
+        else {
+          const scale = Math.pow(2, Math.max(1, bits - 1));
+          word = (Math.round(srcData[i] * scale) >>> 0);
+        }
+        word = (word & wordMask) >>> 0;
+        out[i] = decodeField(word, f, bits);
+      }
+      channels.push(out);
+      units.push(f.unit || state.bitUnit || 'FS');
+    }
+    const sig = NSCLDFormats.baseSignal(base.name + ' · bitfields', base.sampleRate, channels, '位域拆分');
+    sig.channelUnits = units;
+    sig.channelNames = fields.map((f, i) => f.name || ('FIELD' + (i + 1)));
+    sig.format = '位域拆分 · ' + fields.length + ' 字段';
+    sig.bits = bits;
+    state.bitSourceChannel = sourceChannel;
+    state.bitSplit = true;
+    state.signal = sig;
+    state.channel = 0;
+    state.channelCount = sig.channelCount;
+    state.weighted = null;
+    state.specs = []; state.spec = null; state.times = []; state.jitters = []; state.jitter = null;
+    state.selection = null; state.cursorA = null; state.cursorB = null; state.playhead = null;
+    state.waveX0 = 0; state.waveX1 = sig.duration;
+    updateChannelSelect();
+    updateFileMeta(base.name + ' · ' + fields.length + ' fields', sig.format);
+    $('bitError').textContent = '';
+    $('bitMeta').textContent = bits + '-bit · ' + fields.length + ' 字段 · 已拆分';
+    updateEmpty();
+    clearCards();
+    renderPlots();
+    setStatus('位域拆分完成 · ' + fields.length + ' 个字段通道');
+    analyzeAll();
+  }
+
+  function restoreOriginal() {
+    if (!state.baseSignal) return;
+    const sig = state.baseSignal;
+    state.signal = sig;
+    state.bitSplit = false;
+    state.channel = Math.min(state.bitSourceChannel || 0, sig.channelCount - 1);
+    state.channelCount = sig.channelCount;
+    state.weighted = null;
+    state.specs = []; state.spec = null; state.times = []; state.jitters = []; state.jitter = null;
+    state.selection = null;
+    state.waveX0 = 0; state.waveX1 = sig.duration;
+    updateChannelSelect();
+    updateFileMeta(sig.name, sig.format + ' · ' + sig.sampleRate + ' Hz');
+    $('bitMeta').textContent = state.bitWordBits + '-bit · ' + (state.bitFields ? state.bitFields.length : 0) + ' 字段';
+    updateEmpty(); clearCards(); renderPlots();
+    setStatus('已恢复原始信号');
+    analyzeAll();
+  }
+
+  function fmtNum(v) {
+    if (!isFinite(v)) return '—';
+    if (v !== 0 && Math.abs(v) < 0.001) return v.toExponential(2);
+    return v.toFixed(5);
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+
+  app.analyzeAll = analyzeAll;
+  app.updateMeasurements = updateMeasurements;
+  app.updateSelectionInfo = updateSelectionInfo;
+  app.applySelection = applySelection;
+  app.resetWaveView = resetWaveView;
+  app.resetSpectrumView = resetSpectrumView;
+  app.showWaveMenu = showWaveMenu;
+  app.showSpectrumMenu = showSpectrumMenu;
+  app.statusHover = statusHover;
+  app.setCursorLabel = setCursorLabel;
+  app.saveSettings = saveSettings;
+  app.applyBitFields = applyBitFields;
+  app.restoreOriginal = restoreOriginal;
+  app.setView = setView;
+
+  function init() {
+    syncControls();
+    wavePlot = new NSCLDPlots.WaveformPlot($('waveCanvas'), app);
+    spectrumPlot = new NSCLDPlots.SpectrumPlot($('spectrumCanvas'), app);
+    jitterPlot = new NSCLDPlots.JitterPlot($('jitterCanvas'), app);
+    editor = new NSCLDBitfield.BitFieldEditor(app);
+    app.editor = editor;
+    app.plots = { wave: wavePlot, spectrum: spectrumPlot, jitter: jitterPlot };
+    bind();
+    updateEmpty();
+    clearCards();
+    setStatus('NSCLD Web instrument · 载入信号或打开内置测试信号');
+    setTimeout(loadDemo, 120);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
+
+</script>
+</body>
+</html>
